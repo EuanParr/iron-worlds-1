@@ -1,0 +1,13 @@
+# depslib dependency file v1.0
+1620381101 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
+	<gl/gl.h>
+	<iostream>
+	<cmath>
+	<windows.h>
+	"matrix.h"
+
+1620381205 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
+
+1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
+	"matrix.h"
+
