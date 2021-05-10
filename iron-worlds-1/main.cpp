@@ -1,11 +1,12 @@
-#include <gl/gl.h>
 #include <iostream>
 #include <cmath>
 #include <windows.h>
 
-#include "matrix.h"
+#include "scene.h"
 
 const double pi = 3.14159265358979323846;
+
+matrix::Matrix<float, 4> screenMatrix;
 
 void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* renderContextHandle_Ptr)
 {
@@ -68,6 +69,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PostQuitMessage(0);
                 break;
             }
+
+        }
+        break;
+
+        case WM_SIZE:
+        {
+            RECT newWindowSize;
+            GetClientRect(hwnd, &newWindowSize);
+            if (wglGetCurrentContext())
+            {
+                glViewport(0, 0, newWindowSize.right - newWindowSize.left, newWindowSize.bottom - newWindowSize.top);
+            }
+
+            float aspectRatio = ((float)newWindowSize.right - newWindowSize.left) / ((float)newWindowSize.bottom - newWindowSize.top);
+            screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
         }
         break;
 
@@ -76,6 +92,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     return 0;
+}
+
+void describeShard()
+{
+    int coords[4][3][3] =
+    {
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}},
+        {{0, 1, 0}, {1, 0, 0}, {1, 1, 1}},
+        {{0, 0, 1}, {0, 1, 0}, {1, 1, 1}},
+        {{0, 0, 1}, {1, 0, 0}, {1, 1, 1}}
+    };
+
+    glBegin(GL_TRIANGLES);
+
+    for (int face = 0; face < 4; face++)
+    {
+        for (int point = 0; point < 3; point++)
+        {
+            float x, y ,z;
+            x = coords[face][point][0] - 0.5f;
+            y = coords[face][point][1] - 0.5f;
+            z = coords[face][point][2] - 0.5f;
+            glColor3f(1, 2*x, 0);
+            glVertex3f(1.4*x, 1.4*y, 1.4*z);
+        }
+    }
+    glEnd();
 }
 
 void describeCube()
@@ -117,32 +160,33 @@ void describeCube()
 
 void describeSphere()
 {
-    for (float i = 0; i < 2 * pi; i+= pi / 20)
+    double step = pi / 2;
+    for (float i = 0; i < 2 * pi; i+= step)
     {
         glBegin(GL_TRIANGLE_STRIP);
         float x, y, z;
 
-        for (float j = -pi; j < pi; j+= pi / 20)
+        for (float j = -pi; j < pi; j+= step)
         {
 
-
-            x = cos(i) * sin(j);
-            y = sin(i) * sin(j);
+            float sinJ = sin(j);
+            x = cos(i) * sinJ;
+            y = sin(i) * sinJ;
             z = cos(j);
 
             glColor3f(x/2 + 0.5f, y/2 + 0.5f, z/2 + 0.5f);
             glVertex3f(x, y, z);
 
-            i += pi / 20;
+            i += step;
 
-            x = cos(i) * sin(j);
-            y = sin(i) * sin(j);
-            z = cos(j);
+            x = cos(i) * sinJ;
+            y = sin(i) * sinJ;
+            //z = cos(j);
 
             glColor3f(x/2 + 0.5f, y/2 + 0.5f, z/2 + 0.5f);
             glVertex3f(x, y, z);
 
-            i -= pi / 20;
+            i -= step;
         }
         glEnd();
     }
@@ -220,19 +264,27 @@ int WINAPI WinMain(
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    matrix::Mat4<float> leftMatrix = matrix::makeTranslate(-0.5f, 0.0f, 0.0f);
-    matrix::Mat4<float> rightMatrix = matrix::makeTranslate(0.5f, 0.0f, 0.0f);
-    matrix::Mat4<float> scaleMatrix = matrix::makeScale(0.5f, 0.5f, 0.5f);
-    matrix::Mat4<float> frustumMatrix = matrix::makeFrustum<float>();
+    matrix::Matrix<float, 4> leftMatrix = matrix::makeTranslate(-0.5f, 0.0f, 0.0f);
+    matrix::Matrix<float, 4> rightMatrix = matrix::makeTranslate(0.5f, 0.0f, 0.0f);
+    matrix::Matrix<float, 4> scaleMatrix = matrix::makeScale(0.5f, 0.5f, 0.5f);
+    //matrix::Matrix<float, 4> frustumMatrix = matrix::makeFrustum<float>();
 
-    glMultMatrixf(frustumMatrix.getRaw());
+    body::Body testBody;
+    testBody.angularVelocity.data[0] = 0.1;
+    testBody.velocity.data[2] = 1;
+    testBody.radius = 0.1;
 
-    //std::cout << glGetString(GL_VERSION);
+    scene::Scene testScene;
+    testScene.bodies.push_back(testBody);
+    testScene.perspectives.push_back(scene::Perspective());
+    testScene.currentPerspective_PtrWeak = &testScene.perspectives.front();
 
     /* program main loop */
     while (!bQuit)
     {
         /* check for messages */
+        // use if instead of when, so that if a message induces a quit the
+        // process quits immediately
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             /* handle or dispatch messages */
@@ -258,6 +310,21 @@ int WINAPI WinMain(
 
             glPushMatrix();
 
+            glMultMatrixf(screenMatrix.getRaw());
+            //glMultMatrixf(frustumMatrix.getRaw());
+
+            /*glPushMatrix();
+            testBody.integrateMotionStep(1.0);
+            matrix::Matrix<double, 4> testMatrix = testBody.makeBasisMatrix();
+            glMultMatrixd(testMatrix.getRaw());
+            describeCube();
+            glPopMatrix();*/
+
+            testScene.draw();
+            testScene.simulateStep(1.0);
+
+            glPushMatrix();
+
             glMultMatrixf(leftMatrix.getRaw());
 
             // glRotatef uses degrees
@@ -275,7 +342,9 @@ int WINAPI WinMain(
             glRotatef(theta, 1.0f, 1.0f, 1.0f);
             glRotatef(phi, 0.7f, 1.5f, -1.0f);
             glMultMatrixf(scaleMatrix.getRaw());
-            describeCube();
+            describeShard();
+
+            glPopMatrix();
 
             glPopMatrix();
 

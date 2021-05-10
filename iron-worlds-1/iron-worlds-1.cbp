@@ -37,9 +37,15 @@
 			<Add library="glu32" />
 			<Add library="gdi32" />
 		</Linker>
+		<Unit filename="body.cpp" />
+		<Unit filename="body.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="matrix.cpp" />
 		<Unit filename="matrix.h" />
+		<Unit filename="renderer.cpp" />
+		<Unit filename="renderer.h" />
+		<Unit filename="scene.cpp" />
+		<Unit filename="scene.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

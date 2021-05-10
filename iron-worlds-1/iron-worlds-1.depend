@@ -1,13 +1,35 @@
 # depslib dependency file v1.0
-1620381101 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
-	<gl/gl.h>
+1620638814 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
 	<iostream>
 	<cmath>
 	<windows.h>
-	"matrix.h"
+	"scene.h"
 
-1620381205 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
+1620636273 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
+	<iostream>
 
 1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
 	"matrix.h"
+
+1620392944 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
+	"body.h"
+
+1620637872 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
+	"matrix.h"
+	"renderer.h"
+	<cmath>
+
+1620637841 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
+	<gl/gl.h>
+
+1620637727 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.cpp
+	"renderer.h"
+
+1620638710 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
+	"body.h"
+	"renderer.h"
+	<list>
+
+1620638768 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
+	"scene.h"
 
