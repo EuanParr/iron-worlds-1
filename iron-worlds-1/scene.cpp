@@ -2,48 +2,57 @@
 
 namespace scene
 {
-    void cube()
+    matrix::Matrix<double, 4> Perspective::getPerspectiveMatrix()
     {
-        int coords[3] = {0, 1, 2};
-        int coordIndices[3] = {0, 1, 2};
+        matrix::Matrix<double, 4> result;
 
-        // for each axis
-        for (int i = 0; i < 3; i++)
+
+        // to convert from angular displacement vector(3) to rotation
+        // matrix(3), use formula
+        // R = I + K * sin theta + K^2 * (1 - cos theta)
+        // where K is cross product matrix of normalised angular
+        // displacement vector, and theta is magnitude of vector
+
+        matrix::Matrix<double, 3> identity3;
+        double a, b, c;
+        a = worldAngularDisplacement.data[0];
+        b = worldAngularDisplacement.data[1];
+        c = worldAngularDisplacement.data[2];
+        double theta = pow(a*a + b*b + c*c, 0.5);
+
+        if (theta != 0)
         {
-            // exchange axes
-            int temp = coordIndices[0];
-            coordIndices[0] = coordIndices[1];
-            coordIndices[1] = coordIndices[2];
-            coordIndices[2] = temp;
+            matrix::Matrix<double, 3, 1> omega = worldAngularDisplacement * (1.0f/theta);
 
-            // for each face on the axis
-            for (int j = 0; j < 2; j++)
-            {
-                coords[coordIndices[0]] = j;
-                glBegin(GL_TRIANGLE_STRIP);
-                for (int k = 0; k < 2; k++)
-                {
-                    coords[coordIndices[1]] = k;
-                    for (int l = 0; l < 2; l++)
-                    {
-                        coords[coordIndices[2]] = l;
-                        float x = coords[0] - 0.5f;
-                        float y = coords[1] - 0.5f;
-                        float z = coords[2] - 0.5f;
-                        glColor3f(2*x, 2*y, 2*z);
-                        glVertex3f(1.4*x, 1.4*y, 1.4*z);
-                    }
-                }
-                glEnd();
-            }
+            matrix::Matrix<double, 3> K;
+            double (&kCells)[9] = K.data;
+            kCells[0] = 0.0;
+            kCells[1] = omega.data[2];
+            kCells[2] = -omega.data[1];
+            kCells[3] = -omega.data[2];
+            kCells[4] = 0.0;
+            kCells[5] = omega.data[0];
+            kCells[6] = omega.data[1];
+            kCells[7] = -omega.data[0];
+            kCells[8] = 0.0;
+
+            identity3 += K * sin(theta) + K * K * (1 - cos(theta));
         }
+
+        matrix::smashMatrix(result, identity3);
+
+        result *= matrix::makeTranslate(worldDisplacement.data[0], worldDisplacement.data[1], worldDisplacement.data[2]);
+
+        return matrix::makeFrustum<double>() * result;
     }
+
 
     void Scene::draw()
     {
         if (!currentPerspective_PtrWeak)
         {
             std::cerr << "No current Perspective\n";
+            return;
         }
         glPushMatrix();
         glMultMatrixd(currentPerspective_PtrWeak->getPerspectiveMatrix().getRaw());
@@ -51,7 +60,7 @@ namespace scene
         {
             glPushMatrix();
             glMultMatrixd(currentBody.makeBasisMatrix().getRaw());
-            cube();
+            currentBody.myShape->draw();
             glPopMatrix();
         }
         glPopMatrix();

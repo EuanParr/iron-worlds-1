@@ -1,6 +1,7 @@
 #ifndef MATRIX_H_INCLUDED
 #define MATRIX_H_INCLUDED
 
+#include <cmath>
 #include <iostream>
 
 namespace matrix
@@ -106,6 +107,17 @@ namespace matrix
         }
     }
 
+    template <typename T, unsigned int M>
+    T AbsoluteOfVector(Matrix<T, M, 1> vec)
+    {
+        T sum = 0;
+        for (unsigned int i = 0; i < M; i++)
+        {
+            sum += vec.data[i] * vec.data[i];
+        }
+        return pow(sum, 0.5);
+    }
+
     template <typename T, unsigned int MLEFT, unsigned int MNCOMMON, unsigned int NRIGHT>
     Matrix<T, MLEFT, NRIGHT> operator*(const Matrix<T, MLEFT, MNCOMMON>& leftMatrix, const Matrix<T, MNCOMMON, NRIGHT>& rightMatrix)
     {
@@ -143,7 +155,7 @@ namespace matrix
     }
 
     template <typename T, unsigned int M, unsigned int N>
-    void operator*=(const Matrix<T, M, N>& mat, const T scalar)
+    void operator*=(Matrix<T, M, N>& mat, const T scalar)
     {
         mat = mat * scalar;
     }

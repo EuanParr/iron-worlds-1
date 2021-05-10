@@ -1,12 +1,13 @@
-#include <iostream>
 #include <cmath>
+#include <iostream>
+#include <random>
 #include <windows.h>
 
+#include "logic.h"
 #include "scene.h"
 
-const double pi = 3.14159265358979323846;
-
 matrix::Matrix<float, 4> screenMatrix;
+scene::Scene testScene;
 
 void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* renderContextHandle_Ptr)
 {
@@ -68,6 +69,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case VK_ESCAPE:
                     PostQuitMessage(0);
                 break;
+                case 0x57:
+                    testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] -= 0.3;
             }
 
         }
@@ -94,104 +97,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-void describeShard()
-{
-    int coords[4][3][3] =
-    {
-        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}},
-        {{0, 1, 0}, {1, 0, 0}, {1, 1, 1}},
-        {{0, 0, 1}, {0, 1, 0}, {1, 1, 1}},
-        {{0, 0, 1}, {1, 0, 0}, {1, 1, 1}}
-    };
-
-    glBegin(GL_TRIANGLES);
-
-    for (int face = 0; face < 4; face++)
-    {
-        for (int point = 0; point < 3; point++)
-        {
-            float x, y ,z;
-            x = coords[face][point][0] - 0.5f;
-            y = coords[face][point][1] - 0.5f;
-            z = coords[face][point][2] - 0.5f;
-            glColor3f(1, 2*x, 0);
-            glVertex3f(1.4*x, 1.4*y, 1.4*z);
-        }
-    }
-    glEnd();
-}
-
-void describeCube()
-{
-    int coords[3] = {0, 1, 2};
-    int coordIndices[3] = {0, 1, 2};
-
-    // for each axis
-    for (int i = 0; i < 3; i++)
-    {
-        // exchange axes
-        int temp = coordIndices[0];
-        coordIndices[0] = coordIndices[1];
-        coordIndices[1] = coordIndices[2];
-        coordIndices[2] = temp;
-
-        // for each face on the axis
-        for (int j = 0; j < 2; j++)
-        {
-            coords[coordIndices[0]] = j;
-            glBegin(GL_TRIANGLE_STRIP);
-            for (int k = 0; k < 2; k++)
-            {
-                coords[coordIndices[1]] = k;
-                for (int l = 0; l < 2; l++)
-                {
-                    coords[coordIndices[2]] = l;
-                    float x = coords[0] - 0.5f;
-                    float y = coords[1] - 0.5f;
-                    float z = coords[2] - 0.5f;
-                    glColor3f(2*x, 2*y, 2*z);
-                    glVertex3f(1.4*x, 1.4*y, 1.4*z);
-                }
-            }
-            glEnd();
-        }
-    }
-}
-
-void describeSphere()
-{
-    double step = pi / 2;
-    for (float i = 0; i < 2 * pi; i+= step)
-    {
-        glBegin(GL_TRIANGLE_STRIP);
-        float x, y, z;
-
-        for (float j = -pi; j < pi; j+= step)
-        {
-
-            float sinJ = sin(j);
-            x = cos(i) * sinJ;
-            y = sin(i) * sinJ;
-            z = cos(j);
-
-            glColor3f(x/2 + 0.5f, y/2 + 0.5f, z/2 + 0.5f);
-            glVertex3f(x, y, z);
-
-            i += step;
-
-            x = cos(i) * sinJ;
-            y = sin(i) * sinJ;
-            //z = cos(j);
-
-            glColor3f(x/2 + 0.5f, y/2 + 0.5f, z/2 + 0.5f);
-            glVertex3f(x, y, z);
-
-            i -= step;
-        }
-        glEnd();
-    }
-}
-
 int WINAPI WinMain(
     // WinAPI handle to the instance of this executable
     // currently running
@@ -203,6 +108,10 @@ int WINAPI WinMain(
     // legacy
     int nCmdShow)
 {
+    (void)previousProgramInstanceHandle;
+    (void)commandLineString_Ptr;
+    (void)nCmdShow;
+
     WNDCLASSEX windowClassEx;
     HWND windowHandle;
     HDC deviceContextHandle;
@@ -246,17 +155,17 @@ int WINAPI WinMain(
     windowHandle = CreateWindowEx(0,
                           "GLSample",
                           "OpenGL Sample",
-                          WS_OVERLAPPEDWINDOW /*| WS_MAXIMIZE*/,
+                          WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_MAXIMIZE,
                           CW_USEDEFAULT,
                           CW_USEDEFAULT,
-                          1024,
-                          1024,
+                          CW_USEDEFAULT,
+                          CW_USEDEFAULT,
                           NULL,
                           NULL,
                           programInstanceHandle,
                           NULL);
 
-    ShowWindow(windowHandle, nCmdShow);
+    //ShowWindow(windowHandle, nCmdShow);
 
     /* enable OpenGL for the window */
     EnableOpenGL(windowHandle, &deviceContextHandle, &renderContextHandle);
@@ -264,20 +173,37 @@ int WINAPI WinMain(
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    matrix::Matrix<float, 4> leftMatrix = matrix::makeTranslate(-0.5f, 0.0f, 0.0f);
-    matrix::Matrix<float, 4> rightMatrix = matrix::makeTranslate(0.5f, 0.0f, 0.0f);
-    matrix::Matrix<float, 4> scaleMatrix = matrix::makeScale(0.5f, 0.5f, 0.5f);
-    //matrix::Matrix<float, 4> frustumMatrix = matrix::makeFrustum<float>();
-
     body::Body testBody;
-    testBody.angularVelocity.data[0] = 0.1;
-    testBody.velocity.data[2] = 1;
-    testBody.radius = 0.1;
+    testBody.angularVelocity.data[0] = 0.06;
+    testBody.angularVelocity.data[1] = 0.1;
+    testBody.angularVelocity.data[2] = 0.13;
+    testBody.velocity.data[2] = 0.01;
+    testBody.radius = 1;
+    testBody.myShape = new renderer::Cube();
 
-    scene::Scene testScene;
+
+
+    scene::Perspective testPerspective;
+    testPerspective.worldDisplacement.data[2] = 50;
+    testPerspective.worldAngularDisplacement.data[2] = 0.0;
+
     testScene.bodies.push_back(testBody);
-    testScene.perspectives.push_back(scene::Perspective());
+    testScene.perspectives.push_back(testPerspective);
     testScene.currentPerspective_PtrWeak = &testScene.perspectives.front();
+
+    for (int i = 0; i < 100; i++)
+    {
+        body::Body newBody;
+        newBody.velocity.data[0] = logic::unitRand();
+        newBody.velocity.data[1] = logic::unitRand();
+        newBody.velocity.data[2] = logic::unitRand();
+        //newBody.velocity *= 1/matrix::AbsoluteOfVector(newBody.velocity);
+        newBody.angularVelocity.data[0] = logic::unitRand();
+        newBody.angularVelocity.data[1] = logic::unitRand();
+        newBody.angularVelocity.data[2] = logic::unitRand();
+        newBody.myShape = new renderer::Shard();
+        testScene.bodies.push_back(newBody);
+    }
 
     /* program main loop */
     while (!bQuit)
@@ -300,8 +226,6 @@ int WINAPI WinMain(
         }
         else
         {
-            /* OpenGL animation code goes here */
-
             // set the background colour, black
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -311,40 +235,9 @@ int WINAPI WinMain(
             glPushMatrix();
 
             glMultMatrixf(screenMatrix.getRaw());
-            //glMultMatrixf(frustumMatrix.getRaw());
-
-            /*glPushMatrix();
-            testBody.integrateMotionStep(1.0);
-            matrix::Matrix<double, 4> testMatrix = testBody.makeBasisMatrix();
-            glMultMatrixd(testMatrix.getRaw());
-            describeCube();
-            glPopMatrix();*/
 
             testScene.draw();
-            testScene.simulateStep(1.0);
-
-            glPushMatrix();
-
-            glMultMatrixf(leftMatrix.getRaw());
-
-            // glRotatef uses degrees
-            glRotatef(theta, 1.0f, 1.0f, 1.0f);
-            glRotatef(phi, 0.7f, 1.5f, -1.0f);
-            glMultMatrixf(scaleMatrix.getRaw());
-            describeSphere();
-
-            glPopMatrix();
-
-            glPushMatrix();
-
-            glMultMatrixf(rightMatrix.getRaw());
-            // glRotatef uses degrees
-            glRotatef(theta, 1.0f, 1.0f, 1.0f);
-            glRotatef(phi, 0.7f, 1.5f, -1.0f);
-            glMultMatrixf(scaleMatrix.getRaw());
-            describeShard();
-
-            glPopMatrix();
+            testScene.simulateStep(0.1);
 
             glPopMatrix();
 
@@ -366,8 +259,6 @@ int WINAPI WinMain(
 
     return msg.wParam;
 }
-
-
 
 
 

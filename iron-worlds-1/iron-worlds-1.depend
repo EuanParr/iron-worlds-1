@@ -1,35 +1,50 @@
 # depslib dependency file v1.0
-1620638814 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
-	<iostream>
+1620662619 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
 	<cmath>
+	<iostream>
+	<random>
 	<windows.h>
+	"logic.h"
 	"scene.h"
 
-1620636273 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
+1620662580 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
+	<cmath>
 	<iostream>
 
 1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
 	"matrix.h"
 
-1620392944 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
+1620662421 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
 	"body.h"
 
-1620637872 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
+1620662041 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
 	"matrix.h"
 	"renderer.h"
 	<cmath>
 
-1620637841 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
+1620662987 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
+	<cmath>
 	<gl/gl.h>
 
 1620637727 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.cpp
 	"renderer.h"
 
-1620638710 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
+1620640565 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
 	"body.h"
 	"renderer.h"
 	<list>
 
-1620638768 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
+1620645486 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
 	"scene.h"
+
+1620649497 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\logic.cpp
+	"logic.h"
+
+1620649504 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\logic.h
+	<random>
+
+1620658794 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.cpp
+	"input.h"
+
+1620659166 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.h
 
