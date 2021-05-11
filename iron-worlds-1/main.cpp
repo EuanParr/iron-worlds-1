@@ -3,6 +3,7 @@
 #include <random>
 #include <windows.h>
 
+#include "input.h"
 #include "logic.h"
 #include "scene.h"
 
@@ -69,8 +70,48 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case VK_ESCAPE:
                     PostQuitMessage(0);
                 break;
+                case 0x44:
+                case 0x41:
+                case 0x46:
+                case 0x52:
+                case 0x53:
                 case 0x57:
-                    testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] -= 0.3;
+                case VK_UP:
+                case VK_DOWN:
+                case VK_RIGHT:
+                case VK_LEFT:
+                case 0x45:
+                case 0x51:
+                case VK_SPACE:
+                    input::keyStates[wParam] = true;
+                break;
+            }
+
+        }
+        break;
+
+        case WM_KEYUP:
+        {
+            switch (wParam)
+            {
+                case VK_ESCAPE:
+                    PostQuitMessage(0);
+                break;
+                case 0x44:
+                case 0x41:
+                case 0x46:
+                case 0x52:
+                case 0x53:
+                case 0x57:
+                case VK_UP:
+                case VK_DOWN:
+                case VK_RIGHT:
+                case VK_LEFT:
+                case 0x45:
+                case 0x51:
+                case VK_SPACE:
+                    input::keyStates[wParam] = false;
+                break;
             }
 
         }
@@ -167,6 +208,11 @@ int WINAPI WinMain(
 
     //ShowWindow(windowHandle, nCmdShow);
 
+    for (int i = 0; i < NUM_KEYS; i++)
+    {
+        input::keyStates[i] = false;
+    }
+
     /* enable OpenGL for the window */
     EnableOpenGL(windowHandle, &deviceContextHandle, &renderContextHandle);
     //glEnable(GL_CULL_FACE);
@@ -174,9 +220,10 @@ int WINAPI WinMain(
     glDepthFunc(GL_LESS);
 
     body::Body testBody;
-    testBody.angularVelocity.data[0] = 0.06;
-    testBody.angularVelocity.data[1] = 0.1;
-    testBody.angularVelocity.data[2] = 0.13;
+    testBody.angularVelocityQuaternion.data[0] = 0.06;
+    testBody.angularVelocityQuaternion.data[1] = 0.1;
+    testBody.angularVelocityQuaternion.data[2] = 0.13;
+    testBody.angularVelocityQuaternion.normalise();
     testBody.velocity.data[2] = 0.01;
     testBody.radius = 1;
     testBody.myShape = new renderer::Cube();
@@ -193,15 +240,19 @@ int WINAPI WinMain(
 
     for (int i = 0; i < 100; i++)
     {
+        double k = 0.01;
         body::Body newBody;
         newBody.velocity.data[0] = logic::unitRand();
         newBody.velocity.data[1] = logic::unitRand();
         newBody.velocity.data[2] = logic::unitRand();
-        //newBody.velocity *= 1/matrix::AbsoluteOfVector(newBody.velocity);
-        newBody.angularVelocity.data[0] = logic::unitRand();
-        newBody.angularVelocity.data[1] = logic::unitRand();
-        newBody.angularVelocity.data[2] = logic::unitRand();
-        newBody.myShape = new renderer::Shard();
+        newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
+        newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
+        newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
+        /*newBody.angularVelocityQuaternion.data[0] = 1 * k;
+        newBody.angularVelocityQuaternion.data[1] = 1 * k;
+        newBody.angularVelocityQuaternion.data[2] = 1 * k;*/
+        newBody.angularVelocityQuaternion.normalise();
+        newBody.myShape = new renderer::Cube();
         testScene.bodies.push_back(newBody);
     }
 
@@ -233,11 +284,49 @@ int WINAPI WinMain(
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glPushMatrix();
-
             glMultMatrixf(screenMatrix.getRaw());
 
             testScene.draw();
             testScene.simulateStep(0.1);
+
+            double camSpeed = 0.5;
+            double camAngularSpeed = 0.02;
+
+            if (input::keyStates[0x41])
+                testScene.currentPerspective_PtrWeak->worldDisplacement.data[0] += camSpeed;
+            if (input::keyStates[0x44])
+                testScene.currentPerspective_PtrWeak->worldDisplacement.data[0] -= camSpeed;
+            if (input::keyStates[0x46])
+                testScene.currentPerspective_PtrWeak->worldDisplacement.data[1] += camSpeed;
+            if (input::keyStates[0x52])
+                testScene.currentPerspective_PtrWeak->worldDisplacement.data[1] -= camSpeed;
+            if (input::keyStates[0x53])
+                testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] += camSpeed;
+            if (input::keyStates[0x57])
+                testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] -= camSpeed;
+            if (input::keyStates[VK_UP])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[0] += camAngularSpeed;
+            if (input::keyStates[VK_DOWN])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[0] -= camAngularSpeed;
+            if (input::keyStates[VK_LEFT])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[1] += camAngularSpeed;
+            if (input::keyStates[VK_RIGHT])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[1] -= camAngularSpeed;
+            if (input::keyStates[0x45])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[2] += camAngularSpeed;
+            if (input::keyStates[0x51])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[2] -= camAngularSpeed;
+            if (input::keyStates[VK_SPACE])
+            {
+                for (body::Body& newBody : testScene.bodies)
+                {
+                    double k = 0.05;
+                    newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
+                    newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
+                    newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
+                    newBody.angularVelocityQuaternion.normalise();
+                }
+            }
 
             glPopMatrix();
 

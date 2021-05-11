@@ -1,28 +1,30 @@
 # depslib dependency file v1.0
-1620662619 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
+1620759161 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
 	<cmath>
 	<iostream>
 	<random>
 	<windows.h>
+	"input.h"
 	"logic.h"
 	"scene.h"
 
-1620662580 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
+1620744628 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
 	<cmath>
 	<iostream>
 
 1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
 	"matrix.h"
 
-1620662421 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
+1620754477 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
 	"body.h"
 
-1620662041 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
+1620754170 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
 	"matrix.h"
 	"renderer.h"
+	"quaternion.h"
 	<cmath>
 
-1620662987 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
+1620679489 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
 	<cmath>
 	<gl/gl.h>
 
@@ -34,17 +36,29 @@
 	"renderer.h"
 	<list>
 
-1620645486 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
+1620745926 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
 	"scene.h"
 
-1620649497 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\logic.cpp
+1620759157 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\logic.cpp
 	"logic.h"
 
 1620649504 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\logic.h
 	<random>
 
-1620658794 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.cpp
+1620731980 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.cpp
 	"input.h"
 
-1620659166 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.h
+1620731983 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.h
+
+1620743750 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quarternion.cpp
+	"quarternion.h"
+
+1620746736 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quarternion.h
+	"matrix.h"
+
+1620746969 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quaternion.cpp
+	"quaternion.h"
+
+1620759084 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quaternion.h
+	"matrix.h"
 

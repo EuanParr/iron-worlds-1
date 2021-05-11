@@ -39,7 +39,7 @@ namespace scene
             identity3 += K * sin(theta) + K * K * (1 - cos(theta));
         }
 
-        matrix::smashMatrix(result, identity3);
+        result.smashMatrix(identity3);
 
         result *= matrix::makeTranslate(worldDisplacement.data[0], worldDisplacement.data[1], worldDisplacement.data[2]);
 

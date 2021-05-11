@@ -53,6 +53,26 @@ namespace matrix
                 data[i] = arr[i];
             }
         }
+
+        // converts matrices forcefully
+        // aligns the 2 at top left corner and overwrites, casting cell type,
+        // at the area of intersection
+        // useful for changing precision or converting between
+        // homogeneous and traditional coordinates
+        template <typename OTHERTYPE, unsigned int OTHERM, unsigned int OTHERN>
+        void smashMatrix(const Matrix<OTHERTYPE, OTHERM, OTHERN>& fromMatrix)
+        {
+            unsigned int m, n;
+            m = std::min(M, OTHERM);
+            n = std::min(N, OTHERN);
+            for (unsigned int i = 0; i < m; i++)
+            {
+                for (unsigned int j = 0; j < n; j++)
+                {
+                    *index(i, j) = (ELEMENTTYPE)fromMatrix.getAt(i, j);
+                }
+            }
+        }
     };
 
     template <typename T>
@@ -85,26 +105,6 @@ namespace matrix
         data[13] = y;
         data[14] = z;
         return result;
-    }
-
-    // converts matrices forcefully
-    // aligns the 2 at top left corner and overwrites, casting cell type,
-    // at the area of intersection
-    // useful for changing precision or converting between
-    // homogeneous and traditional coordinates
-    template <typename T1, typename T2, unsigned int M1, unsigned int N1, unsigned int M2, unsigned int N2>
-    void smashMatrix(Matrix<T1, M1, N1>& toMatrix, const Matrix<T2, M2, N2>& fromMatrix)
-    {
-        unsigned int m, n;
-        m = std::min(M1, M2);
-        n = std::min(N1, N2);
-        for (unsigned int i = 0; i < m; i++)
-        {
-            for (unsigned int j = 0; j < n; j++)
-            {
-                *toMatrix.index(i, j) = (T1)fromMatrix.getAt(i, j);
-            }
-        }
     }
 
     template <typename T, unsigned int M>

@@ -83,7 +83,7 @@ namespace renderer
                     x = coords[face][point][0] - 0.5f;
                     y = coords[face][point][1] - 0.5f;
                     z = coords[face][point][2] - 0.5f;
-                    glColor3f(1, 2*x, 0);
+                    glColor3f(0, 2*x, 1);
                     glVertex3f(1.4*x, 1.4*y, 1.4*z);
                 }
             }

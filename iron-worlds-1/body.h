@@ -3,6 +3,7 @@
 
 #include "matrix.h"
 #include "renderer.h"
+#include "quaternion.h"
 
 #include <cmath>
 
@@ -11,7 +12,8 @@ namespace body
     class Body
     {
     public:
-        matrix::Matrix<double, 3, 1> displacement, velocity, angularDisplacement, angularVelocity;
+        matrix::Matrix<double, 3, 1> displacement, velocity;
+        quaternion::Quaternion<double> angularDisplacementQuaternion, angularVelocityQuaternion;
         double radius = 1;
         renderer::Shape* myShape = nullptr;
 
