@@ -8,7 +8,7 @@ namespace scene
 
         result = worldAngularDisplacementQuaternion.getMatrix();
 
-        result = matrix::makeTranslate(worldDisplacement.data[0], worldDisplacement.data[1], worldDisplacement.data[2]) * result;
+        result *= matrix::makeTranslate(worldDisplacement.data[0], worldDisplacement.data[1], worldDisplacement.data[2]);
 
         return matrix::makeFrustum<double>() * result;
     }

@@ -107,6 +107,18 @@ namespace matrix
         return result;
     }
 
+    template <typename T>
+    Matrix<T, 4> makeTranslate(Matrix<T, 4, 1> vec)
+    {
+        Matrix<T, 4> result;
+        T* data = result.getRaw();
+        T w = vec.data[3];
+        data[12] = vec.data[0] / w;
+        data[13] = vec.data[1] / w;
+        data[14] = vec.data[2] / w;
+        return result;
+    }
+
     template <typename T, unsigned int M>
     T vectorAbsolute(Matrix<T, M, 1> vec)
     {

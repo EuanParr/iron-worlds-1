@@ -135,6 +135,11 @@ namespace rotation
             this->data[2] = z;
             this->data[3] = w;
         }
+
+        Quaternion<T> conjugate()
+        {
+            return Quaternion<T>(-this->data[0], -this->data[1], -this->data[2], this->data[3]);
+        }
     };
 
     const double basicAngle = 0.1;

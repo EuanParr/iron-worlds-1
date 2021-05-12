@@ -228,7 +228,12 @@ int WINAPI WinMain(
     testBody.radius = 1;
     testBody.myShape = new renderer::Cube();
 
-
+    matrix::Matrix<double, 4, 1> xBasisMatrix;
+    xBasisMatrix.data[0] = 1;
+    matrix::Matrix<double, 4, 1> yBasisMatrix;
+    yBasisMatrix.data[1] = 1;
+    matrix::Matrix<double, 4, 1> zBasisMatrix;
+    zBasisMatrix.data[2] = 1;
 
     scene::Perspective testPerspective;
     testPerspective.worldDisplacement.data[2] = 50;
@@ -293,32 +298,37 @@ int WINAPI WinMain(
             double camSpeed = 0.5;
             double camAngularSpeed = 0.02;
 
+            matrix::Matrix<double, 3, 1> cameraMover;
+
             if (input::keyStates[0x41])
-                testScene.currentPerspective_PtrWeak->worldDisplacement.data[0] += camSpeed;
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
             if (input::keyStates[0x44])
-                testScene.currentPerspective_PtrWeak->worldDisplacement.data[0] -= camSpeed;
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
             if (input::keyStates[0x46])
-                testScene.currentPerspective_PtrWeak->worldDisplacement.data[1] += camSpeed;
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
             if (input::keyStates[0x52])
-                testScene.currentPerspective_PtrWeak->worldDisplacement.data[1] -= camSpeed;
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
             if (input::keyStates[0x53])
-                testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] += camSpeed;
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
             if (input::keyStates[0x57])
-                testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] -= camSpeed;
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
+
+            testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
+
             if (input::keyStates[VK_UP])
                 //std::cout << "moving\n";
                 //std::cout << rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed);
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_DOWN])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (input::keyStates[VK_DOWN])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[VK_LEFT])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_RIGHT])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (input::keyStates[VK_RIGHT])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[0x45])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[0x51])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (input::keyStates[0x51])
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[VK_SPACE])
             {
                 for (body::Body& newBody : testScene.bodies)
