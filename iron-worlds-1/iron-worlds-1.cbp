@@ -39,11 +39,17 @@
 		</Linker>
 		<Unit filename="body.cpp" />
 		<Unit filename="body.h" />
+		<Unit filename="input.cpp" />
+		<Unit filename="input.h" />
+		<Unit filename="logic.cpp" />
+		<Unit filename="logic.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="matrix.cpp" />
 		<Unit filename="matrix.h" />
 		<Unit filename="renderer.cpp" />
 		<Unit filename="renderer.h" />
+		<Unit filename="rotation.cpp" />
+		<Unit filename="rotation.h" />
 		<Unit filename="scene.cpp" />
 		<Unit filename="scene.h" />
 		<Extensions>

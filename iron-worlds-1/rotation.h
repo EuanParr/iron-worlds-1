@@ -81,7 +81,7 @@ namespace rotation
             return result;
         }
 
-        matrix::Matrix<T, 3, 1> getImaginary()
+        matrix::Matrix<T, 3, 1> getImaginary() const
         {
             matrix::Matrix<T, 3, 1> result;
             result.data[0] = this->data[0];
@@ -95,13 +95,13 @@ namespace rotation
             return this->data[3];
         }
 
-        Quaternion naturalLog()
+        Quaternion naturalLog () const
         {
             Quaternion<T> result;
             T imaginaryAbsolute = matrix::vectorAbsolute(getImaginary());
             T realPart = log(imaginaryAbsolute);
             result.data[3] = realPart;
-            matrix::Matrix<T, 3, 1> imaginaryPart = getImaginary() * (imaginaryAbsolute > 0.0001 ? atan(realPart / imaginaryAbsolute) / imaginaryAbsolute : 0);
+            matrix::Matrix<T, 3, 1> imaginaryPart = getImaginary() * (imaginaryAbsolute > 0.00001 ? atan(realPart / imaginaryAbsolute) / imaginaryAbsolute : 0);
             result.data[0] = imaginaryPart.data[0];
             result.data[1] = imaginaryPart.data[1];
             result.data[2] = imaginaryPart.data[2];
@@ -117,21 +117,32 @@ namespace rotation
             return result * exp(getReal());
         }
 
-        Quaternion(Quaternion<T>& oldQ, T power)
+        Quaternion(const Quaternion<T>& oldQ, T power)
         {
-            //std::cout << oldQ << "goes to\n";
             Quaternion<T> result = oldQ.naturalLog();
-            //std::cout << result;
             result = result * power;
-            //std::cout << result;
             result = result.exponential();
-            //std::cout << result;
             for (int i = 0; i < 4; i++)
             {
                 this->data[i] = result.data[i];
             }
         }
+
+        Quaternion(T x, T y, T z, T w)
+        {
+            this->data[0] = x;
+            this->data[1] = y;
+            this->data[2] = z;
+            this->data[3] = w;
+        }
     };
+
+    const double basicAngle = 0.1;
+
+    const Quaternion<double> unitIQuaternion(sin(basicAngle/2), 0, 0, cos(basicAngle/2));
+    const Quaternion<double> unitJQuaternion(0, sin(basicAngle/2), 0, cos(basicAngle/2));
+    const Quaternion<double> unitKQuaternion(0, 0, sin(basicAngle/2), cos(basicAngle/2));
+    const Quaternion<double> unitRQuaternion(0, 0, 0, 1);
 
     template <typename T>
     Quaternion<T> operator*(Quaternion<T> left, Quaternion<T> right)

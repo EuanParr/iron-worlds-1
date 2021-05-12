@@ -288,7 +288,7 @@ int WINAPI WinMain(
             glMultMatrixf(screenMatrix.getRaw());
 
             testScene.draw();
-            testScene.simulateStep(0.1);
+            testScene.simulateStep(0.01);
 
             double camSpeed = 0.5;
             double camAngularSpeed = 0.02;
@@ -306,17 +306,19 @@ int WINAPI WinMain(
             if (input::keyStates[0x57])
                 testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] -= camSpeed;
             if (input::keyStates[VK_UP])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[0] += camAngularSpeed;
+                //std::cout << "moving\n";
+                //std::cout << rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed);
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[VK_DOWN])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[0] -= camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[VK_LEFT])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[1] += camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[VK_RIGHT])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[1] -= camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[0x45])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[2] += camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[0x51])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[2] -= camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[VK_SPACE])
             {
                 for (body::Body& newBody : testScene.bodies)
@@ -327,6 +329,8 @@ int WINAPI WinMain(
                     newBody.angularVelocityQuaternion.normalise();
                 }
             }
+
+            //std::cout << testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
 
             glPopMatrix();
 
