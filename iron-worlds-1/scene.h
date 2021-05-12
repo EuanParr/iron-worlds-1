@@ -11,7 +11,8 @@ namespace scene
     class Perspective
     {
     public:
-        matrix::Matrix<double, 3, 1> worldDisplacement, worldAngularDisplacement;
+        matrix::Matrix<double, 3, 1> worldDisplacement;
+        rotation::Quaternion<double> worldAngularDisplacementQuaternion;
 
         matrix::Matrix<double, 4> getPerspectiveMatrix();
     };

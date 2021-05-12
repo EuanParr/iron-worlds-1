@@ -1,13 +1,19 @@
-#ifndef QUATERNION_H_INCLUDED
-#define QUATERNION_H_INCLUDED
+#ifndef ROTATION_H_INCLUDED
+#define ROTATION_H_INCLUDED
 
 #include "matrix.h"
 
-namespace quaternion
+namespace rotation
 {
     template <typename T>
     class Quaternion : public matrix::Matrix<T, 4, 1>
     {
+        // following the convention set with homogeneous vectors and matrices,
+        // the special (real) coefficient comes last. This does not follow
+        // usual quaternion notation
+
+        // hence xi + yj + zk + w
+
     public:
         Quaternion()
         {
@@ -17,16 +23,22 @@ namespace quaternion
             this->data[3] = 1;
         }
 
-        void normalise()
+        T getAbsolute()
         {
-            T absoluteVal = this->data[0] * this->data[0] +
+            T absoluteSqr = this->data[0] * this->data[0] +
                             this->data[1] * this->data[1] +
                             this->data[2] * this->data[2] +
                             this->data[3] * this->data[3];
+            return pow(absoluteSqr, 0.5);
+        }
 
-            if (absoluteVal != 1)
+        void normalise()
+        {
+            T k = 1/getAbsolute();
+
+            if (k > 1.01 || k < 0.99)
             {
-                T k = pow(absoluteVal, -0.5);
+                //std::cout << "had to normalise\n";
                 this->data[0] *= k;
                 this->data[1] *= k;
                 this->data[2] *= k;
@@ -68,6 +80,57 @@ namespace quaternion
             result.data[15] = 1;
             return result;
         }
+
+        matrix::Matrix<T, 3, 1> getImaginary()
+        {
+            matrix::Matrix<T, 3, 1> result;
+            result.data[0] = this->data[0];
+            result.data[1] = this->data[1];
+            result.data[2] = this->data[2];
+            return result;
+        }
+
+        T getReal()
+        {
+            return this->data[3];
+        }
+
+        Quaternion naturalLog()
+        {
+            Quaternion<T> result;
+            T imaginaryAbsolute = matrix::vectorAbsolute(getImaginary());
+            T realPart = log(imaginaryAbsolute);
+            result.data[3] = realPart;
+            matrix::Matrix<T, 3, 1> imaginaryPart = getImaginary() * (imaginaryAbsolute > 0.0001 ? atan(realPart / imaginaryAbsolute) / imaginaryAbsolute : 0);
+            result.data[0] = imaginaryPart.data[0];
+            result.data[1] = imaginaryPart.data[1];
+            result.data[2] = imaginaryPart.data[2];
+            return result;
+        }
+
+        Quaternion exponential()
+        {
+            Quaternion<T> result;
+            T imaginaryAbsolute = matrix::vectorAbsolute(getImaginary());
+            result.data[3] = cos(imaginaryAbsolute);
+            result.smashMatrix(getImaginary() * (imaginaryAbsolute > 0.00001 ? sin(imaginaryAbsolute) / imaginaryAbsolute : 0));
+            return result * exp(getReal());
+        }
+
+        Quaternion(Quaternion<T>& oldQ, T power)
+        {
+            //std::cout << oldQ << "goes to\n";
+            Quaternion<T> result = oldQ.naturalLog();
+            //std::cout << result;
+            result = result * power;
+            //std::cout << result;
+            result = result.exponential();
+            //std::cout << result;
+            for (int i = 0; i < 4; i++)
+            {
+                this->data[i] = result.data[i];
+            }
+        }
     };
 
     template <typename T>
@@ -94,6 +157,23 @@ namespace quaternion
         //std::cout << result;
         return result;
     }
+
+    template <typename T>
+    Quaternion<T> operator*(Quaternion<T> q, T scalar)
+    {
+        Quaternion<T> result;
+        for (int i = 0; i < 4; i++)
+        {
+            result.data[i] = q.data[i] * scalar;
+        }
+        return result;
+    }
+
+    template <typename T>
+    Quaternion<T> operator*(T scalar, Quaternion<T> q)
+    {
+        return q * scalar;
+    }
 }
 
-#endif // QUATERNION_H_INCLUDED
+#endif // ROTATION_H_INCLUDED

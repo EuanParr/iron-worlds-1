@@ -108,7 +108,7 @@ namespace matrix
     }
 
     template <typename T, unsigned int M>
-    T AbsoluteOfVector(Matrix<T, M, 1> vec)
+    T vectorAbsolute(Matrix<T, M, 1> vec)
     {
         T sum = 0;
         for (unsigned int i = 0; i < M; i++)

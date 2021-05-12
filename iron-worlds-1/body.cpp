@@ -5,7 +5,7 @@ namespace body
     void Body::integrateMotionStep(double deltaT)
     {
         displacement += velocity * deltaT;
-        angularDisplacementQuaternion = angularVelocityQuaternion * angularDisplacementQuaternion; // * deltaT;
+        angularDisplacementQuaternion = rotation::Quaternion<double>(angularVelocityQuaternion, deltaT) * angularDisplacementQuaternion;
         //std::cout << angularDisplacementQuaternion;
         velocity.data[1] -= 0.1 * deltaT;
         if (displacement.data[1] < -10 && velocity.data[1] < 0 && true)

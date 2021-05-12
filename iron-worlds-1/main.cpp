@@ -232,15 +232,16 @@ int WINAPI WinMain(
 
     scene::Perspective testPerspective;
     testPerspective.worldDisplacement.data[2] = 50;
-    testPerspective.worldAngularDisplacement.data[2] = 0.0;
+    testPerspective.worldAngularDisplacementQuaternion.data[2] = 0.0;
 
     testScene.bodies.push_back(testBody);
     testScene.perspectives.push_back(testPerspective);
     testScene.currentPerspective_PtrWeak = &testScene.perspectives.front();
 
+    double k = 0.01;
+
     for (int i = 0; i < 100; i++)
     {
-        double k = 0.01;
         body::Body newBody;
         newBody.velocity.data[0] = logic::unitRand();
         newBody.velocity.data[1] = logic::unitRand();
@@ -305,22 +306,21 @@ int WINAPI WinMain(
             if (input::keyStates[0x57])
                 testScene.currentPerspective_PtrWeak->worldDisplacement.data[2] -= camSpeed;
             if (input::keyStates[VK_UP])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[0] += camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[0] += camAngularSpeed;
             if (input::keyStates[VK_DOWN])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[0] -= camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[0] -= camAngularSpeed;
             if (input::keyStates[VK_LEFT])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[1] += camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[1] += camAngularSpeed;
             if (input::keyStates[VK_RIGHT])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[1] -= camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[1] -= camAngularSpeed;
             if (input::keyStates[0x45])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[2] += camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[2] += camAngularSpeed;
             if (input::keyStates[0x51])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacement.data[2] -= camAngularSpeed;
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.data[2] -= camAngularSpeed;
             if (input::keyStates[VK_SPACE])
             {
                 for (body::Body& newBody : testScene.bodies)
                 {
-                    double k = 0.05;
                     newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
                     newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
                     newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;

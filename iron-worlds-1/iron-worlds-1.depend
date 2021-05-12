@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1620759161 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
+1620811516 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
 	<cmath>
 	<iostream>
 	<random>
@@ -8,20 +8,20 @@
 	"logic.h"
 	"scene.h"
 
-1620744628 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
+1620805231 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
 	<cmath>
 	<iostream>
 
 1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
 	"matrix.h"
 
-1620754477 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
+1620805585 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
 	"body.h"
 
-1620754170 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
+1620771193 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
 	"matrix.h"
 	"renderer.h"
-	"quaternion.h"
+	"rotation.h"
 	<cmath>
 
 1620679489 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
@@ -31,12 +31,12 @@
 1620637727 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.cpp
 	"renderer.h"
 
-1620640565 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
+1620771293 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
 	"body.h"
 	"renderer.h"
 	<list>
 
-1620745926 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
+1620771402 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
 	"scene.h"
 
 1620759157 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\logic.cpp
@@ -59,6 +59,12 @@
 1620746969 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quaternion.cpp
 	"quaternion.h"
 
-1620759084 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quaternion.h
+1620761231 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quaternion.h
+	"matrix.h"
+
+1620771118 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.cpp
+	"rotation.h"
+
+1620811413 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.h
 	"matrix.h"
 
