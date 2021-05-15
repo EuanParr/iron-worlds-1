@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #include "input.h"
+#include "lisp.h"
 #include "logic.h"
 #include "scene.h"
 
@@ -183,9 +184,8 @@ int WINAPI WinMain(
     windowClassEx.hCursor = LoadCursor(NULL, IDC_ARROW);
     windowClassEx.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     windowClassEx.lpszMenuName = NULL;
-    windowClassEx.lpszClassName = "GLSample";
+    windowClassEx.lpszClassName = "MainWindow";
     windowClassEx.hIconSm = LoadIcon(NULL, IDI_APPLICATION);;
-
 
     if (!RegisterClassEx(&windowClassEx))
     {
@@ -194,8 +194,8 @@ int WINAPI WinMain(
 
     /* create main window */
     windowHandle = CreateWindowEx(0,
-                          "GLSample",
-                          "OpenGL Sample",
+                          "MainWindow",
+                          "Iron Worlds 1",
                           WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_MAXIMIZE,
                           CW_USEDEFAULT,
                           CW_USEDEFAULT,
@@ -219,15 +219,6 @@ int WINAPI WinMain(
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    body::Body testBody;
-    testBody.angularVelocityQuaternion.data[0] = 0.06;
-    testBody.angularVelocityQuaternion.data[1] = 0.1;
-    testBody.angularVelocityQuaternion.data[2] = 0.13;
-    testBody.angularVelocityQuaternion.normalise();
-    testBody.velocity.data[2] = 0.01;
-    testBody.radius = 1;
-    testBody.myShape = new renderer::Cube();
-
     matrix::Matrix<double, 4, 1> xBasisMatrix;
     xBasisMatrix.data[0] = 1;
     matrix::Matrix<double, 4, 1> yBasisMatrix;
@@ -239,11 +230,10 @@ int WINAPI WinMain(
     testPerspective.worldDisplacement.data[2] = 50;
     testPerspective.worldAngularDisplacementQuaternion.data[2] = 0.0;
 
-    testScene.bodies.push_back(testBody);
     testScene.perspectives.push_back(testPerspective);
     testScene.currentPerspective_PtrWeak = &testScene.perspectives.front();
 
-    double k = 0.01;
+    double k = 0.1;
 
     for (int i = 0; i < 100; i++)
     {
@@ -293,7 +283,7 @@ int WINAPI WinMain(
             glMultMatrixf(screenMatrix.getRaw());
 
             testScene.draw();
-            testScene.simulateStep(0.01);
+            testScene.simulateStep(0.1);
 
             double camSpeed = 0.5;
             double camAngularSpeed = 0.02;
@@ -340,7 +330,7 @@ int WINAPI WinMain(
                 }
             }
 
-            //std::cout << testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+
 
             glPopMatrix();
 
@@ -362,8 +352,3 @@ int WINAPI WinMain(
 
     return msg.wParam;
 }
-
-
-
-
-

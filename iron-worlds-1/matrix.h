@@ -130,6 +130,36 @@ namespace matrix
         return pow(sum, 0.5);
     }
 
+    template <typename T, unsigned int M>
+    Matrix<T, M> minor(Matrix<T, M+1> oldMat, unsigned int i, unsigned int j)
+    {
+        Matrix<T, M> result;
+        unsigned int newI = 0;
+        for (unsigned int oldI = 0; oldI <= M; oldI++)
+        {
+            if (oldI != i)
+            {
+                unsigned int newJ = 0;
+                for (unsigned int oldJ = 0; oldJ <= M; oldJ++)
+                {
+                    if (oldJ != j)
+                    {
+                        &result.index(newI, newJ) = oldMat.getAt(oldI, oldJ);
+                    }
+                    newJ++;
+                }
+                newI++;
+            }
+        }
+        return result;
+    }
+
+    template <typename T, unsigned int M>
+    T determinant(Matrix<T, M> oldMat)
+    {
+
+    }
+
     template <typename T, unsigned int MLEFT, unsigned int MNCOMMON, unsigned int NRIGHT>
     Matrix<T, MLEFT, NRIGHT> operator*(const Matrix<T, MLEFT, MNCOMMON>& leftMatrix, const Matrix<T, MNCOMMON, NRIGHT>& rightMatrix)
     {

@@ -93,6 +93,7 @@ namespace renderer
 
     class Sphere : public Shape
     {
+    public:
         void draw()
         {
             double step = pi / 5;

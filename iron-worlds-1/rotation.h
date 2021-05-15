@@ -142,7 +142,7 @@ namespace rotation
         }
     };
 
-    const double basicAngle = 0.1;
+    const double basicAngle = 1.0;
 
     const Quaternion<double> unitIQuaternion(sin(basicAngle/2), 0, 0, cos(basicAngle/2));
     const Quaternion<double> unitJQuaternion(0, sin(basicAngle/2), 0, cos(basicAngle/2));

@@ -30,6 +30,20 @@ namespace scene
             currentBody.myShape->draw();
             glPopMatrix();
         }
+
+        double groundRadius = 100.0;
+            double groundAlt = -10.0;
+            glBegin(GL_TRIANGLE_FAN);
+            glColor3d(0.0, 1.0, 1.0);
+            glVertex4d(groundRadius, groundAlt, groundRadius, 1);
+            glVertex4d(-groundRadius, groundAlt, groundRadius, 1);
+            glVertex4d(-groundRadius, groundAlt, -groundRadius, 1);
+            glVertex4d(groundRadius, groundAlt, -groundRadius, 1);
+            glEnd();
+
+        glMultMatrixd(matrix::makeScale(1000.0, 1000.0, 1000.0).getRaw());
+        renderer::Sphere().draw();
+
         glPopMatrix();
     }
 

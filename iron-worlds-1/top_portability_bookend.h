@@ -1,0 +1,9 @@
+#ifndef TOP_PORTABILITY_BOOKEND_H_INCLUDED
+#define TOP_PORTABILITY_BOOKEND_H_INCLUDED
+
+namespace top_portability_bookend
+{
+
+}
+
+#endif // TOP_PORTABILITY_BOOKEND_H_INCLUDED
