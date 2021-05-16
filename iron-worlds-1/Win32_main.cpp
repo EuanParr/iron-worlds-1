@@ -163,6 +163,17 @@ int WINAPI WinMain(
     float theta = 0.0f;
     float phi = 34.6f;
 
+    session::Session mySession;
+    std::string inp;
+    while (inp != "quit")
+    {
+        std::cout << ">>> ";
+        auto result = mySession.apply0(mySession.read(std::cin));
+        std::cout << "--> ";
+        mySession.printS(result, std::cout);
+        std::cout << "\n";
+    }
+
     // register window class
 
     // must set size because we are using Ex version

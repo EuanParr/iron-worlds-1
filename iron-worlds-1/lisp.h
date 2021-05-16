@@ -3,19 +3,38 @@
 
 #include "bottom_portability_bookend.h"
 
+#include <iostream>
+#include <list>
 #include <string>
 #include <vector>
 
 namespace lisp
 {
-    class SpecialSymbol
+    typedef std::string SymbolString;
+
+    class SymbolTypeSpecial
     {
     public:
-        std::string name;
+        SymbolString name;
 
         // needs a virtual destructor because SymbolTableEntryValue deletes it
         // polymorphically
-        virtual ~SpecialSymbol() {};
+        virtual ~SymbolTypeSpecial() {};
+    };
+
+    class SymbolTypeValue
+    {
+
+    };
+
+    class SymbolTypeString : public SymbolTypeValue
+    {
+
+    };
+
+    class SymbolTypeInteger : public SymbolTypeValue
+    {
+
     };
 
     /*
@@ -33,13 +52,14 @@ namespace lisp
 
     enum class SymbolTableEntryType
     {
-        Empty, Basic, Special
+        Empty, Basic, Special, Value
     };
 
     union SymbolTableEntryValue
     {
-        std::string* name_Ptr;
-        SpecialSymbol* specialSymbol_Ptr;
+        SymbolString* name_Ptr;
+        SymbolTypeSpecial* specialSymbol_Ptr;
+        SymbolTypeValue* valueSymbol_Ptr;
     };
 
     class SymbolTableEntry
@@ -64,9 +84,31 @@ namespace lisp
             case (SymbolTableEntryType::Special):
                 delete value.specialSymbol_Ptr;
                 break;
+            case (SymbolTableEntryType::Empty):
+                break;
             default:
                 ELOG("Symbol Entry type not accounted for");
                 break;
+            }
+        }
+
+        bool exists()
+        {
+            return typeOfValue != SymbolTableEntryType::Empty;
+        }
+
+        SymbolString getName()
+        {
+            switch (typeOfValue)
+            {
+            case (SymbolTableEntryType::Empty):
+                return "";
+                break;
+            case (SymbolTableEntryType::Basic):
+                return *value.name_Ptr;
+                break;
+            case (SymbolTableEntryType::Special):
+                return value.specialSymbol_Ptr->name;
             }
         }
     };
@@ -97,10 +139,18 @@ namespace lisp
         }
     };
 
+    union SExpressionUnit
+    {
+        SymbolTableEntry* atom;
+        SExpressionUnit*
+    };
+
     class Environment
     {
     public:
         SymbolTable symbols;
+
+        SymbolString read(std::istream& readStream);
     };
 }
 
