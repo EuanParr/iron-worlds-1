@@ -170,7 +170,7 @@ int WINAPI WinMain(
     float theta = 0.0f;
     float phi = 34.6f;
 
-    session::Session mySession;
+    /*session::Session mySession;
     std::string inp;
     while (inp != "quit")
     {
@@ -179,7 +179,7 @@ int WINAPI WinMain(
         std::cout << "--> ";
         mySession.printS(result, std::cout);
         std::cout << "\n";
-    }
+    }*/
 
     // register window class
 

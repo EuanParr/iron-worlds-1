@@ -11,6 +11,7 @@
 #warning "No platform"
 #endif // PLATFORM
 
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 // compiling on windows
 #ifdef _WIN64

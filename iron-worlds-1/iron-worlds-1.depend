@@ -1,21 +1,5 @@
 # depslib dependency file v1.0
-1620828273 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\main.cpp
-	<cmath>
-	<iostream>
-	<random>
-	<windows.h>
-	"input.h"
-	"logic.h"
-	"scene.h"
-
-1620858340 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
-	<cmath>
-	<iostream>
-
-1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
-	"matrix.h"
-
-1620827290 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
+1624829866 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
 	"body.h"
 
 1620771193 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
@@ -24,20 +8,43 @@
 	"rotation.h"
 	<cmath>
 
-1620828340 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
+1624829866 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.h
 	<cmath>
+	<iostream>
+
+1624829866 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.h
+	<cmath>
+	"bottom_portability_bookend.h"
+
+1624831700 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\bottom_portability_bookend.h
+	<iostream>
+	"Fedora_foundation.h"
+	"Win32_foundation.h"
+
+1624829866 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\fedora_foundation.h
+	<GL/glx.h>
+	<GL/gl.h>
+
+1624829866 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_foundation.h
 	<gl/gl.h>
 
-1620637727 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.cpp
-	"renderer.h"
+1624829866 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.h
+	"matrix.h"
 
-1620771293 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
-	"body.h"
-	"renderer.h"
+1620731980 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.cpp
+	"input.h"
+
+1624829866 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.h
+
+1624829866 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.cpp
+	"lisp.h"
+
+1624829866 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.h
+	"bottom_portability_bookend.h"
+	<iostream>
 	<list>
-
-1620898797 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
-	"scene.h"
+	<string>
+	<vector>
 
 1620759157 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\logic.cpp
 	"logic.h"
@@ -46,43 +53,29 @@
 	<iostream>
 	<random>
 
-1620731980 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.cpp
-	"input.h"
-
-1620731983 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.h
-
-1620743750 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quarternion.cpp
-	"quarternion.h"
-
-1620746736 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quarternion.h
+1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
 	"matrix.h"
 
-1620746969 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quaternion.cpp
-	"quaternion.h"
-
-1620761231 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\quaternion.h
-	"matrix.h"
+1620637727 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\renderer.cpp
+	"renderer.h"
 
 1620771118 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.cpp
 	"rotation.h"
 
-1620845278 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.h
-	"matrix.h"
+1624831735 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
+	"scene.h"
 
-1620855717 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.cpp
-	"lisp.h"
-
-1621010610 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.h
-	"bottom_portability_bookend.h"
-	<string>
-	<vector>
+1620771293 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
+	"body.h"
+	"renderer.h"
+	<list>
 
 1621005551 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\top_portability_bookend.cpp
 	"top_portability_bookend.h"
 
 1621005324 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\top_portability_bookend.h
 
-1621070549 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_main.cpp
+1624830872 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_main.cpp
 	<cmath>
 	<iostream>
 	<random>
@@ -90,99 +83,5 @@
 	"input.h"
 	"lisp.h"
 	"logic.h"
-	"scene.h"
-
-1621010627 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\bottom_portability_bookend.h
-	<iostream>
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/input.cpp
-	"input.h"
-
-1624799277 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/input.h
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/logic.cpp
-	"logic.h"
-
-1621171781 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/logic.h
-	<iostream>
-	<random>
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/matrix.cpp
-	"matrix.h"
-
-1624195201 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/matrix.h
-	<cmath>
-	<iostream>
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/rotation.cpp
-	"rotation.h"
-
-1621171781 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/rotation.h
-	"matrix.h"
-
-1621172369 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/lisp.cpp
-	"lisp.h"
-
-1621457593 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/lisp.h
-	"bottom_portability_bookend.h"
-	<iostream>
-	<list>
-	<string>
-	<vector>
-
-1624198763 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/bottom_portability_bookend.h
-	<iostream>
-	"Fedora_foundation.h"
-	"Win32_foundation.h"
-
-1624803461 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/Fedora_foundation.h
-	<GL/glx.h>
-	<GL/gl.h>
-
-1621457028 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/Win32_foundation.h
-	<gl/gl.h>
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/renderer.cpp
-	"renderer.h"
-
-1624198733 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/renderer.h
-	<cmath>
-	"bottom_portability_bookend.h"
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/top_portability_bookend.cpp
-	"top_portability_bookend.h"
-
-1621171781 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/top_portability_bookend.h
-
-1624810129 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/Fedora_main.cpp
-	<cmath>
-	<iostream>
-	<random>
-	<X11/Xlib.h>
-	<X11/Xutil.h>
-	<X11/Xos.h>
-	<chrono>
-	<thread>
-	"top_portability_bookend.h"
-	"input.h"
-	"lisp.h"
-	"logic.h"
-	"scene.h"
-
-1621171781 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/scene.h
-	"body.h"
-	"renderer.h"
-	<list>
-
-1621171781 /home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/body.h
-	"matrix.h"
-	"renderer.h"
-	"rotation.h"
-	<cmath>
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/body.cpp
-	"body.h"
-
-1621171781 source:/home/euan/Documents/Github/iron-worlds-1/iron-worlds-1/scene.cpp
 	"scene.h"
 
