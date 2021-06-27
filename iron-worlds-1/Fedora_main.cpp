@@ -1,8 +1,20 @@
 #include <cmath>
 #include <iostream>
 #include <random>
-#include <windows.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xos.h>
+#include <chrono>
+#include <thread>
 
+#ifndef PLATFORM
+#define PLATFORM_FEDORA
+#define PLATFORM
+#else
+#error "Multiple definition of platform in file " + __FILE__
+#endif // PLATFORM
+
+#include "top_portability_bookend.h"
 #include "input.h"
 #include "lisp.h"
 #include "logic.h"
@@ -11,213 +23,109 @@
 matrix::Matrix<float, 4> screenMatrix;
 scene::Scene testScene;
 
-void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* renderContextHandle_Ptr)
+static int singleBuffer[] = {GLX_RGBA, GLX_DEPTH_SIZE, 16, None};
+static int doubleBuffer[] = {GLX_RGBA, GLX_DEPTH_SIZE, 16, GLX_DOUBLEBUFFER, None};
+bool isDoubleBuffer = true;
+
+Display* x11Display_Ptr;
+int x11ScreenID;
+Window x11WindowID;
+GC x11GraphicsContext;
+XVisualInfo* x11VisualInfo_Ptr;
+Colormap x11Colourmap;
+XSetWindowAttributes x11SetWindowAttributes;
+GLXContext x11GlxContext;
+
+int main(int argc, char** argv)
 {
-    PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
+    long x11EventMask = ExposureMask | ButtonPressMask | KeyPressMask | StructureNotifyMask;
 
-    int pixelFormat;
+    //unsigned long black, white;
 
-    // Set the HDC, note that it was passed by pointer
-    *deviceContextHandle_Ptr = GetDC(windowHandle);
-
-    /* set the pixel format for the DC */
-    // ZeroMemory is provided by WinAPI
-    ZeroMemory(&pixelFormatDescriptor, sizeof(pixelFormatDescriptor));
-
-    pixelFormatDescriptor.nSize = sizeof(pixelFormatDescriptor);
-    pixelFormatDescriptor.nVersion = 1;
-    pixelFormatDescriptor.dwFlags = PFD_DRAW_TO_WINDOW |
-                  PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    pixelFormatDescriptor.iPixelType = PFD_TYPE_RGBA;
-    pixelFormatDescriptor.cColorBits = 24;
-    pixelFormatDescriptor.cDepthBits = 16;
-    pixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
-
-    pixelFormat = ChoosePixelFormat(*deviceContextHandle_Ptr, &pixelFormatDescriptor);
-
-    SetPixelFormat(*deviceContextHandle_Ptr, pixelFormat, &pixelFormatDescriptor);
-
-    /* create and enable the render context (RC) */
-    *renderContextHandle_Ptr = wglCreateContext(*deviceContextHandle_Ptr);
-
-    wglMakeCurrent(*deviceContextHandle_Ptr, *renderContextHandle_Ptr);
-}
-
-void DisableOpenGL (HWND hwnd, HDC hDC, HGLRC hRC)
-{
-    wglMakeCurrent(NULL, NULL);
-    wglDeleteContext(hRC);
-    ReleaseDC(hwnd, hDC);
-}
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
+    // open connection to X server
+    x11Display_Ptr = XOpenDisplay(nullptr);
+    if (!x11Display_Ptr)
     {
-        case WM_CLOSE:
-            // something requested closing the window
-            // we use PostQuitMessage to ensure the process dies with the window
-            PostQuitMessage(0);
-        break;
-
-        case WM_DESTROY:
-            // window is being destroyed, no action needed
-            return 0;
-
-        case WM_KEYDOWN:
-        {
-            switch (wParam)
-            {
-                case VK_ESCAPE:
-                    PostQuitMessage(0);
-                break;
-                case 0x44:
-                case 0x41:
-                case 0x46:
-                case 0x52:
-                case 0x53:
-                case 0x57:
-                case VK_UP:
-                case VK_DOWN:
-                case VK_RIGHT:
-                case VK_LEFT:
-                case 0x45:
-                case 0x51:
-                case VK_SPACE:
-                    input::keyStates[wParam] = true;
-                break;
-            }
-
-        }
-        break;
-
-        case WM_KEYUP:
-        {
-            switch (wParam)
-            {
-                case VK_ESCAPE:
-                    PostQuitMessage(0);
-                break;
-                case 0x44:
-                case 0x41:
-                case 0x46:
-                case 0x52:
-                case 0x53:
-                case 0x57:
-                case VK_UP:
-                case VK_DOWN:
-                case VK_RIGHT:
-                case VK_LEFT:
-                case 0x45:
-                case 0x51:
-                case VK_SPACE:
-                    input::keyStates[wParam] = false;
-                break;
-            }
-
-        }
-        break;
-
-        case WM_SIZE:
-        {
-            RECT newWindowSize;
-            GetClientRect(hwnd, &newWindowSize);
-            if (wglGetCurrentContext())
-            {
-                glViewport(0, 0, newWindowSize.right - newWindowSize.left, newWindowSize.bottom - newWindowSize.top);
-            }
-
-            float aspectRatio = ((float)newWindowSize.right - newWindowSize.left) / ((float)newWindowSize.bottom - newWindowSize.top);
-            screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
-        }
-        break;
-
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        FELOG("Could not open display");
     }
 
-    return 0;
-}
+    // ensure GLX is supported
+    int blankInt;
+    if (!glXQueryExtension(x11Display_Ptr, &blankInt, &blankInt))
+    {
+        FELOG("X server has no OpenGl GLX extension");
+    }
 
-int WINAPI WinMain(
-    // WinAPI handle to the instance of this executable
-    // currently running
-    HINSTANCE programInstanceHandle,
-    // deprecated
-    HINSTANCE previousProgramInstanceHandle,
-    // pointer to command line arguments as a string
-    PSTR commandLineString_Ptr,
-    // legacy
-    int nCmdShow)
-{
-    (void)previousProgramInstanceHandle;
-    (void)commandLineString_Ptr;
-    (void)nCmdShow;
+    //find appropriate visual
+    x11VisualInfo_Ptr = glXChooseVisual(x11Display_Ptr, DefaultScreen(x11Display_Ptr), doubleBuffer);
+    if (!x11VisualInfo_Ptr)
+    {
+        // could not get double buffer
+        ELOG("Double buffer not available");
+        x11VisualInfo_Ptr = glXChooseVisual(x11Display_Ptr, DefaultScreen(x11Display_Ptr), singleBuffer);
+        isDoubleBuffer = false;
+        if (!x11VisualInfo_Ptr)
+        {
+            // could not get single buffer either
+            FELOG("No RGB visual with depth buffer");
+        }
+    }
+    if (x11VisualInfo_Ptr->c_class != TrueColor)
+    {
+        FELOG("The program requires TrueColor visual");
+    }
 
-    WNDCLASSEX windowClassEx;
-    HWND windowHandle;
-    HDC deviceContextHandle;
-    HGLRC renderContextHandle;
-    MSG msg;
-    BOOL bQuit = FALSE;
+    // create a rendering context
+    x11GlxContext = glXCreateContext(x11Display_Ptr, x11VisualInfo_Ptr, None, true);
+    if (!x11GlxContext)
+    {
+        FELOG("Could not create rendering context");
+    }
+
+    // create x window
+    x11Colourmap = XCreateColormap(x11Display_Ptr, RootWindow(x11Display_Ptr, x11VisualInfo_Ptr->screen), x11VisualInfo_Ptr->visual, AllocNone);
+    x11SetWindowAttributes.colormap = x11Colourmap;
+    x11SetWindowAttributes.border_pixel = 0;
+    x11SetWindowAttributes.event_mask = x11EventMask;
+
+    x11WindowID = XCreateWindow(x11Display_Ptr, RootWindow(x11Display_Ptr, x11VisualInfo_Ptr->screen), 0, 0, 300, 200, 0, x11VisualInfo_Ptr->depth, InputOutput, x11VisualInfo_Ptr->visual, CWBorderPixel | CWColormap | CWEventMask, &x11SetWindowAttributes);
+    XSetStandardProperties(x11Display_Ptr, x11WindowID, "Iron Worlds 1", "Iron Worlds 1", None, argv, argc, nullptr);
+
+    // bind rendering context to window
+    glXMakeCurrent(x11Display_Ptr, x11WindowID, x11GlxContext);
+
+    // request displaying window
+    XMapWindow(x11Display_Ptr, x11WindowID);
+
+    //x11ScreenID = DefaultScreen(x11Display_Ptr);
+    //black = BlackPixel(x11Display_Ptr, x11ScreenID);
+    //white = WhitePixel(x11Display_Ptr, x11ScreenID);
+
+    //x11WindowID = XCreateSimpleWindow(
+    //    x11Display_Ptr, DefaultRootWindow(x11Display_Ptr),
+    //    0, 0, 200, 300, 5, white, black);
+
+    //XSetStandardProperties(x11Display_Ptr, x11WindowID,
+    //    "Iron Worlds 1", "Iron Worlds 1", None, nullptr, 0, nullptr);
+
+    XSelectInput(x11Display_Ptr, x11WindowID, x11EventMask);
+
+    //x11GraphicsContext = XCreateGC(x11Display_Ptr, x11WindowID, 0, 0);
+
+    //XSetBackground(x11Display_Ptr, x11GraphicsContext, white);
+    //XSetForeground(x11Display_Ptr, x11GraphicsContext, black);
+
+    //XClearWindow(x11Display_Ptr, x11WindowID);
+    //XMapRaised(x11Display_Ptr, x11WindowID);
+
+    XEvent x11Event;
+
+    bool bQuit = false;
+    bool bRedraw = true;
     float theta = 0.0f;
     float phi = 34.6f;
 
-    // register window class
-
-    // must set size because we are using Ex version
-    windowClassEx.cbSize = sizeof(WNDCLASSEX);
-    // the Render Context is attached to the Device Context,
-    // so we use CS_OWNDC to ensure the context is valid for the duration of the program
-    windowClassEx.style = CS_OWNDC;
-    // attach the window's message handling callback
-    windowClassEx.lpfnWndProc = WindowProc;
-    // no extra bytes needed
-    windowClassEx.cbClsExtra = 0;
-    windowClassEx.cbWndExtra = 0;
-    // attach the handle to this program instance
-    windowClassEx.hInstance = programInstanceHandle;
-    // set the icon, NULL specifies a standard icon,
-    // using default application icon
-    windowClassEx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    // similarly use default cursor
-    windowClassEx.hCursor = LoadCursor(NULL, IDC_ARROW);
-    windowClassEx.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    windowClassEx.lpszMenuName = NULL;
-    windowClassEx.lpszClassName = "MainWindow";
-    windowClassEx.hIconSm = LoadIcon(NULL, IDI_APPLICATION);;
-
-    if (!RegisterClassEx(&windowClassEx))
-    {
-        return 0;
-    }
-
-    /* create main window */
-    windowHandle = CreateWindowEx(0,
-                          "MainWindow",
-                          "Iron Worlds 1",
-                          WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_MAXIMIZE,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          NULL,
-                          NULL,
-                          programInstanceHandle,
-                          NULL);
-
-    //ShowWindow(windowHandle, nCmdShow);
-
-    for (int i = 0; i < NUM_KEYS; i++)
-    {
-        input::keyStates[i] = false;
-    }
-
-    /* enable OpenGL for the window */
-    EnableOpenGL(windowHandle, &deviceContextHandle, &renderContextHandle);
-    //glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
 
     matrix::Matrix<double, 4, 1> xBasisMatrix;
     xBasisMatrix.data[0] = 1;
@@ -255,20 +163,90 @@ int WINAPI WinMain(
     /* program main loop */
     while (!bQuit)
     {
-        /* check for messages */
+        bRedraw = false;
+        // check for messages
         // use if instead of when, so that if a message induces a quit the
         // process quits immediately
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (XCheckWindowEvent(x11Display_Ptr, x11WindowID, x11EventMask, &x11Event))
         {
-            /* handle or dispatch messages */
-            if (msg.message == WM_QUIT)
+            switch (x11Event.type)
             {
-                bQuit = TRUE;
-            }
-            else
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
+                case ConfigureNotify:
+                {
+                    // window resizing
+                    if (true) // TODO: find function to check if context exists
+                    {
+                        glViewport(0, 0, x11Event.xconfigure.width,
+                            x11Event.xconfigure.height);
+                    }
+                    bRedraw = true;
+
+                    float aspectRatio = ((float)x11Event.xconfigure.width) / ((float)x11Event.xconfigure.height);
+                    screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
+                }
+                break;
+                case Expose:
+                    // window became more visible, redraw
+                    // count indicates number of expose events to follow
+                    // for now we process them together on the last one
+                    if (x11Event.xexpose.count == 0)
+                    {
+                        bRedraw = true;
+                    }
+                break;
+                case KeyPress:
+                {
+                    switch (x11Event.xkey.keycode)
+                    {
+                        case XK_Escape:
+                            bQuit = true;
+                        break;
+                        case XK_D:
+                        case XK_A:
+                        case XK_F:
+                        case XK_R:
+                        case XK_S:
+                        case XK_W:
+                        case XK_Up:
+                        case XK_Down:
+                        case XK_Right:
+                        case XK_Left:
+                        case XK_E:
+                        case XK_Q:
+                        case XK_space:
+                            input::keyStates[x11Event.xkey.keycode] = true;
+                        break;
+                    }
+
+                }
+                break;
+
+                case KeyRelease:
+                {
+                    switch (x11Event.xkey.keycode)
+                    {
+                        case XK_Escape:
+                            bQuit = true;
+                        break;
+                        case XK_D:
+                        case XK_A:
+                        case XK_F:
+                        case XK_R:
+                        case XK_S:
+                        case XK_W:
+                        case XK_Up:
+                        case XK_Down:
+                        case XK_Right:
+                        case XK_Left:
+                        case XK_E:
+                        case XK_Q:
+                        case XK_space:
+                            input::keyStates[x11Event.xkey.keycode] = False;
+                        break;
+                    }
+
+                }
+                break;
             }
         }
         else
@@ -290,36 +268,36 @@ int WINAPI WinMain(
 
             matrix::Matrix<double, 3, 1> cameraMover;
 
-            if (input::keyStates[0x41])
+            if (input::keyStates[XK_A])
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
-            if (input::keyStates[0x44])
+            if (input::keyStates[XK_D])
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
-            if (input::keyStates[0x46])
+            if (input::keyStates[XK_F])
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
-            if (input::keyStates[0x52])
+            if (input::keyStates[XK_R])
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
-            if (input::keyStates[0x53])
+            if (input::keyStates[XK_S])
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
-            if (input::keyStates[0x57])
+            if (input::keyStates[XK_W])
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
 
             testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
 
-            if (input::keyStates[VK_UP])
+            if (input::keyStates[XK_Up])
                 //std::cout << "moving\n";
                 //std::cout << rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed);
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_DOWN])
+            if (input::keyStates[XK_Down])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_LEFT])
+            if (input::keyStates[XK_Left])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_RIGHT])
+            if (input::keyStates[XK_Right])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[0x45])
+            if (input::keyStates[XK_E])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[0x51])
+            if (input::keyStates[XK_Q])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_SPACE])
+            if (input::keyStates[XK_space])
             {
                 for (body::Body& newBody : testScene.bodies)
                 {
@@ -330,25 +308,33 @@ int WINAPI WinMain(
                 }
             }
 
-
-
             glPopMatrix();
 
-            SwapBuffers(deviceContextHandle);
+            if (isDoubleBuffer)
+            {
+                glXSwapBuffers(x11Display_Ptr, x11WindowID);
+            }
+            else
+            {
+                glFlush();
+            }
 
             theta += 1.0f;
             phi += 0.6f;
 
-            // Sleep is provided by WinAPI
-            Sleep(10);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
 
+    LOG("BYE");
+
     /* shutdown OpenGL */
-    DisableOpenGL(windowHandle, deviceContextHandle, renderContextHandle);
+    //DisableOpenGL(windowHandle, deviceContextHandle, renderContextHandle);
 
-    /* destroy the window explicitly */
-    DestroyWindow(windowHandle);
+    // destroy the window explicitly
+    //XFreeGC(x11Display_Ptr, x11GraphicsContext);
+    //XDestroyWindow(x11Display_Ptr, x11WindowID);
+    //XCloseDisplay(x11Display_Ptr);
 
-    return msg.wParam;
+    return 0;
 }

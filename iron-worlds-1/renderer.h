@@ -2,7 +2,8 @@
 #define RENDERER_H_INCLUDED
 
 #include <cmath>
-#include <gl/gl.h>
+
+#include "bottom_portability_bookend.h"
 
 namespace renderer
 {

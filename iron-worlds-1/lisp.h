@@ -142,7 +142,7 @@ namespace lisp
     union SExpressionUnit
     {
         SymbolTableEntry* atom;
-        SExpressionUnit*
+        SExpressionUnit* cons;
     };
 
     class Environment
