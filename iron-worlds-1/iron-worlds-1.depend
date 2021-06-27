@@ -15,7 +15,7 @@
 1620300964 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\matrix.cpp
 	"matrix.h"
 
-1620827290 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
+1621270684 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
 	"body.h"
 
 1620771193 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
@@ -66,14 +66,16 @@
 1620771118 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.cpp
 	"rotation.h"
 
-1620845278 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.h
+1621270684 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.h
 	"matrix.h"
 
-1620855717 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.cpp
+1624814923 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.cpp
 	"lisp.h"
 
-1621010610 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.h
+1624814907 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.h
 	"bottom_portability_bookend.h"
+	<iostream>
+	<list>
 	<string>
 	<vector>
 
@@ -82,7 +84,7 @@
 
 1621005324 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\top_portability_bookend.h
 
-1621070549 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_main.cpp
+1624814846 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_main.cpp
 	<cmath>
 	<iostream>
 	<random>
@@ -91,7 +93,33 @@
 	"lisp.h"
 	"logic.h"
 	"scene.h"
+	"session.h"
 
-1621010627 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\bottom_portability_bookend.h
+1621264063 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\bottom_portability_bookend.h
 	<iostream>
+	<fstream>
+
+1621103627 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp_session.cpp
+
+1621243423 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\session.h
+	"structure.h"
+	<iostream>
+	<string>
+	<vector>
+
+1624383772 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\structure.h
+	"bottom_portability_bookend.h"
+	<iostream>
+	<string>
+	<memory>
+
+1621270756 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\session.cpp
+	"session.h"
+	<functional>
+
+1621433813 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\structure.cpp
+	"structure.h"
+
+1621263954 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\bottom_portability_bookend.cpp
+	"bottom_portability_bookend.h"
 

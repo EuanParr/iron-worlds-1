@@ -38,22 +38,12 @@ namespace rotation
 
             if (k > 1.01 || k < 0.99)
             {
-                //std::cout << "had to normalise\n";
                 this->data[0] *= k;
                 this->data[1] *= k;
                 this->data[2] *= k;
                 this->data[3] *= k;
             }
         }
-
-        /*Quaternion(matrix::Matrix<T, 4, 1> vec)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                this->data[i] = vec.data[i];
-            }
-            normalise();
-        }*/
 
         matrix::Matrix<T, 4> getMatrix()
         {
@@ -152,7 +142,6 @@ namespace rotation
     template <typename T>
     Quaternion<T> operator*(Quaternion<T> left, Quaternion<T> right)
     {
-        //std::cout << "Multiplying quaternions\n";
         Quaternion<T> result;
         result.data[0] =  left.data[3] * right.data[0]
                         + left.data[0] * right.data[3]
@@ -170,7 +159,6 @@ namespace rotation
                         - left.data[0] * right.data[0]
                         - left.data[1] * right.data[1]
                         - left.data[2] * right.data[2];
-        //std::cout << result;
         return result;
     }
 

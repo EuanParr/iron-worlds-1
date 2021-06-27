@@ -306,8 +306,6 @@ int WINAPI WinMain(
             testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
 
             if (input::keyStates[VK_UP])
-                //std::cout << "moving\n";
-                //std::cout << rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed);
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
             if (input::keyStates[VK_DOWN])
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;

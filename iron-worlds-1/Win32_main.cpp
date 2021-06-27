@@ -7,6 +7,7 @@
 #include "lisp.h"
 #include "logic.h"
 #include "scene.h"
+#include "session.h"
 
 matrix::Matrix<float, 4> screenMatrix;
 scene::Scene testScene;
@@ -163,12 +164,19 @@ int WINAPI WinMain(
     float theta = 0.0f;
     float phi = 34.6f;
 
+    lisp::LispVirtualMachine lispVM;
+    lispVM.read(std::cin);
+
     session::Session mySession;
-    std::string inp;
-    while (inp != "quit")
+    auto result = mySession.apply0(mySession.read(bottom_portability_bookend::standardLisp));
+
+    //std::cout << sizeof(lisp::ListNode) << " is size of list,\n" << sizeof(lisp::BasicSymbol) << " is size of symbol\n";
+
+    while (result != mySession.errorAtomPtr)
     {
         std::cout << ">>> ";
-        auto result = mySession.apply0(mySession.read(std::cin));
+        result = mySession.apply0(mySession.read(std::cin));
+        //result = mySession.read(std::cin);
         std::cout << "--> ";
         mySession.printS(result, std::cout);
         std::cout << "\n";
@@ -255,9 +263,6 @@ int WINAPI WinMain(
         newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
         newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
         newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
-        /*newBody.angularVelocityQuaternion.data[0] = 1 * k;
-        newBody.angularVelocityQuaternion.data[1] = 1 * k;
-        newBody.angularVelocityQuaternion.data[2] = 1 * k;*/
         newBody.angularVelocityQuaternion.normalise();
         newBody.myShape = new renderer::Cube();
         testScene.bodies.push_back(newBody);
