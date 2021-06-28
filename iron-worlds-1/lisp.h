@@ -75,12 +75,6 @@ namespace lisp
 
     typedef ListNode* HandleListNode;
 
-    union SExpressionUnit
-    {
-        SymbolTableEntry* atom;
-        SExpressionUnit* cons;
-    };
-
     class LispVirtualMachine
     {
     public:

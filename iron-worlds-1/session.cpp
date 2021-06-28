@@ -24,12 +24,12 @@ namespace session
         };
         FunPair functions[] =
         {
-            {"atom", atomAtomPtr, atomLisp},
-            {"eq", eqAtomPtr, eqLisp},
-            {"car", carAtomPtr, carLisp},
-            {"cdr", cdrAtomPtr, cdrLisp},
-            {"cons", consAtomPtr, consLisp},
-            {"def", defAtomPtr, defLisp}
+            {"atom", atomAtomPtr, &Session::atomLisp},
+            {"eq", eqAtomPtr, &Session::eqLisp},
+            {"car", carAtomPtr, &Session::carLisp},
+            {"cdr", cdrAtomPtr, &Session::cdrLisp},
+            {"cons", consAtomPtr, &Session::consLisp},
+            {"def", defAtomPtr, &Session::defLisp}
         };
         for (auto item : functions)
         {
@@ -79,17 +79,17 @@ namespace session
     std::string Session::preTokenise(std::string inString)
     {
         // inserts appropriate whitespace near brackets, converts all whitespace to spaces
-        std::string replacementRules[][2] = {{"(", " ( "}, {")", " ) "}, {"'", " ' "}, {"\n", " "}, {"\t", " "}};
+        std::pair<std::string, std::string> replacementRules[] = {{"(", " ( "}, {")", " ) "}, {"'", " ' "}, {"\n", " "}, {"\t", " "}};
 
-        for (std::string rule[2] : replacementRules)
+        for (std::pair<std::string, std::string>& rule : replacementRules)
         {
             std::string::iterator loc = inString.begin();
             while (loc != inString.end())
             {
                 bool match = true;
-                std::string::iterator patternChar = rule[0].begin();
+                std::string::iterator patternChar = rule.first.begin();
                 std::string::iterator matchChar = loc;
-                while (patternChar != rule[0].end() && matchChar != inString.end())
+                while (patternChar != rule.first.end() && matchChar != inString.end())
                 {
                     if (*patternChar != *matchChar)
                     {
@@ -102,9 +102,9 @@ namespace session
                 if (match)
                 {
                     int index = loc - inString.begin();
-                    inString.replace(loc - inString.begin(), rule[0].size(), rule[1]);
+                    inString.replace(loc - inString.begin(), rule.first.size(), rule.second);
                     loc = inString.begin() + index;
-                    int displacement = rule[1].size() - rule[0].size();
+                    int displacement = rule.second.size() - rule.first.size();
                     while (displacement < 0 && loc != inString.end() && loc != inString.begin() - 1)
                     {
                         ++displacement;
