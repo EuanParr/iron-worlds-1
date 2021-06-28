@@ -3,6 +3,13 @@
 #include <random>
 #include <windows.h>
 
+#ifndef PLATFORM
+#define PLATFORM_WIN32
+#define PLATFORM
+#else
+#error "Multiple definition of platform in file " + __FILE__
+#endif // PLATFORM
+
 #include "input.h"
 #include "lisp.h"
 #include "logic.h"

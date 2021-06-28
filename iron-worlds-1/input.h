@@ -1,7 +1,7 @@
 #ifndef INPUT_H_INCLUDED
 #define INPUT_H_INCLUDED
 
-#define NUM_KEYS 255
+#define NUM_KEYS 0xffff
 
 namespace input
 {
