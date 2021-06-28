@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# Code::Blocks local files
+*.depend
+*.layout
+*.cscope_file_list
