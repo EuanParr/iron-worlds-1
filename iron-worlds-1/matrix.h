@@ -43,9 +43,9 @@ namespace matrix
             }
         }
 
-        ELEMENTTYPE* getRaw() {ELEMENTTYPE* result = data; return result;}
-        ELEMENTTYPE* index(int i, int j) {return (ELEMENTTYPE*)data + i + M*j;}
-        ELEMENTTYPE getAt (int i, int j) const {return data[i + M * j];}
+        ELEMENTTYPE* getRaw() {ELEMENTTYPE* result = data; return result;};
+        ELEMENTTYPE* getPtrAt(int i, int j) {return (ELEMENTTYPE*)data + i + M*j;}
+        ELEMENTTYPE getAtConst (int i, int j) const {return data[i + M * j];}
         void loadArray(ELEMENTTYPE* arr)
         {
             for (unsigned int i = 0; i < M * N; i++)
@@ -69,7 +69,7 @@ namespace matrix
             {
                 for (unsigned int j = 0; j < n; j++)
                 {
-                    *index(i, j) = (ELEMENTTYPE)fromMatrix.getAt(i, j);
+                    *getPtrAt(i, j) = (ELEMENTTYPE)fromMatrix.getAtConst(i, j);
                 }
             }
         }
@@ -144,7 +144,7 @@ namespace matrix
                 {
                     if (oldJ != j)
                     {
-                        &result.index(newI, newJ) = oldMat.getAt(oldI, oldJ);
+                        &result.getPtrAt(newI, newJ) = oldMat.getAt(oldI, oldJ);
                     }
                     newJ++;
                 }
@@ -171,9 +171,9 @@ namespace matrix
                 T sum = 0;
                 for (unsigned int k = 0; k < MNCOMMON; k++)
                 {
-                    sum += leftMatrix.getAt(i, k) * rightMatrix.getAt(k, j);
+                    sum += leftMatrix.getAtConst(i, k) * rightMatrix.getAtConst(k, j);
                 }
-                *(result.index(i, j)) = sum;
+                *(result.getPtrAt(i, j)) = sum;
             }
         }
         return result;

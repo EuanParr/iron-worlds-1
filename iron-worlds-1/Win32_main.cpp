@@ -3,6 +3,13 @@
 #include <random>
 #include <windows.h>
 
+#ifndef PLATFORM
+#define PLATFORM_WIN32
+#define PLATFORM
+#else
+#error "Multiple definition of platform in file " + __FILE__
+#endif // PLATFORM
+
 #include "input.h"
 #include "lisp.h"
 #include "logic.h"
@@ -163,7 +170,7 @@ int WINAPI WinMain(
     float theta = 0.0f;
     float phi = 34.6f;
 
-    session::Session mySession;
+    /*session::Session mySession;
     std::string inp;
     while (inp != "quit")
     {
@@ -172,7 +179,7 @@ int WINAPI WinMain(
         std::cout << "--> ";
         mySession.printS(result, std::cout);
         std::cout << "\n";
-    }
+    }*/
 
     // register window class
 
