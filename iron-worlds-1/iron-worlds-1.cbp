@@ -129,85 +129,32 @@
 			<Option target="Win32_Release" />
 		</Unit>
 		<Unit filename="body.cpp" />
-		<Unit filename="body.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
-		<Unit filename="bottom_portability_bookend.h">
-			<Option weight="73" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="body.h" />
+		<Unit filename="bottom_portability_bookend.cpp" />
+		<Unit filename="bottom_portability_bookend.h" />
 		<Unit filename="input.cpp" />
-		<Unit filename="input.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="input.h" />
 		<Unit filename="lisp.cpp" />
-		<Unit filename="lisp.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="lisp.h" />
+		<Unit filename="lisp_session.cpp" />
+		<Unit filename="lisp_session.h" />
 		<Unit filename="logic.cpp" />
-		<Unit filename="logic.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="logic.h" />
 		<Unit filename="matrix.cpp" />
-		<Unit filename="matrix.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="matrix.h" />
+		<Unit filename="programs.lsp" />
 		<Unit filename="renderer.cpp" />
-		<Unit filename="renderer.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="renderer.h" />
 		<Unit filename="rotation.cpp" />
-		<Unit filename="rotation.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="rotation.h" />
 		<Unit filename="scene.cpp" />
-		<Unit filename="scene.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="scene.h" />
+		<Unit filename="session.cpp" />
+		<Unit filename="session.h" />
+		<Unit filename="structure.cpp" />
+		<Unit filename="structure.h" />
 		<Unit filename="top_portability_bookend.cpp" />
-		<Unit filename="top_portability_bookend.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Win32_Debug" />
-			<Option target="Win32_Release" />
-			<Option target="Fedora_Release" />
-		</Unit>
+		<Unit filename="top_portability_bookend.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

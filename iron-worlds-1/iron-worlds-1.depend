@@ -1,7 +1,4 @@
 # depslib dependency file v1.0
-1624829866 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.cpp
-	"body.h"
-
 1620771193 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\body.h
 	"matrix.h"
 	"renderer.h"
@@ -62,26 +59,11 @@
 1620771118 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.cpp
 	"rotation.h"
 
-1624831735 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.cpp
-	"scene.h"
-
-1620771293 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\scene.h
-	"body.h"
-	"renderer.h"
-	<list>
-
 1621005551 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\top_portability_bookend.cpp
 	"top_portability_bookend.h"
 
 1621005324 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\top_portability_bookend.h
 
-1624830872 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_main.cpp
-	<cmath>
+1621264063 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\bottom_portability_bookend.h
 	<iostream>
-	<random>
-	<windows.h>
-	"input.h"
-	"lisp.h"
-	"logic.h"
-	"scene.h"
-
+	<fstream>

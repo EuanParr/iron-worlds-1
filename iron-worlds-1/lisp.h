@@ -10,134 +10,70 @@
 
 namespace lisp
 {
+    typedef char SymbolChar;
     typedef std::string SymbolString;
 
-    class SymbolTypeSpecial
+    struct ListNode;
+    struct BasicSymbol;
+
+    union LispTypePtr_Uni
     {
-    public:
+        // a pointer to one of the Lisp entity types
+        ListNode* listNode;
+        BasicSymbol* basicSymbol;
+    };
+
+    enum class LispTypeFlag : char
+    {
+        // specifies a Lisp entity type
+        ListT = 0,
+        BasicSymbolT = 1,
+    };
+
+    struct ListNode
+    {
+        // Points to 2 Lisp entities and remembers their types
+        LispTypeFlag firstFlags;
+        LispTypeFlag secondFlags;
+
+        LispTypePtr_Uni firstValue;
+        LispTypePtr_Uni secondValue;
+    };
+
+    struct LispHandle
+    {
+        // Points to a Lisp entity and remembers its type
+        LispTypeFlag flags;
+        LispTypePtr_Uni value;
+    };
+
+    struct BasicSymbol
+    {
         SymbolString name;
-
-        // needs a virtual destructor because SymbolTableEntryValue deletes it
-        // polymorphically
-        virtual ~SymbolTypeSpecial() {};
+        LispTypeFlag valueFlags;
+        LispTypePtr_Uni value;
     };
 
-    class SymbolTypeValue
-    {
-
-    };
-
-    class SymbolTypeString : public SymbolTypeValue
-    {
-
-    };
-
-    class SymbolTypeInteger : public SymbolTypeValue
-    {
-
-    };
-
-    /*
-        SymbolTableEntry is a discriminated union: it stores a union and a
-        variable recording the type currently active in the union.
-        This allows space-efficient storage of different types without dealing
-        with class polymorphism overhead.
-
-        The cost is that we must manually ensure type safety.
-
-        An alternative would be to use a void* pointer, but that is not smaller
-        than the union and the intent is less clear. Also it would require ugly
-        casting.
-    */
-
-    enum class SymbolTableEntryType
-    {
-        Empty, Basic, Special, Value
-    };
-
-    union SymbolTableEntryValue
-    {
-        SymbolString* name_Ptr;
-        SymbolTypeSpecial* specialSymbol_Ptr;
-        SymbolTypeValue* valueSymbol_Ptr;
-    };
-
-    class SymbolTableEntry
+    class LispListMemory
     {
     public:
-        SymbolTableEntryType typeOfValue;
-        SymbolTableEntryValue value;
+        ListNode* nodesArray;
+        unsigned int arraySize;
+        unsigned int defaultSize = 0x10000;
 
-        SymbolTableEntry()
+        LispListMemory()
         {
-            typeOfValue = SymbolTableEntryType::Empty;
+            arraySize = defaultSize;
+            nodesArray = new ListNode[arraySize];
         }
 
-        ~SymbolTableEntry()
+        ~LispListMemory()
         {
-            // determine type of stored value and destroy appropriately
-            switch (typeOfValue)
-            {
-            case (SymbolTableEntryType::Basic):
-                delete value.name_Ptr;
-                break;
-            case (SymbolTableEntryType::Special):
-                delete value.specialSymbol_Ptr;
-                break;
-            case (SymbolTableEntryType::Empty):
-                break;
-            default:
-                ELOG("Symbol Entry type not accounted for");
-                break;
-            }
-        }
-
-        bool exists()
-        {
-            return typeOfValue != SymbolTableEntryType::Empty;
-        }
-
-        SymbolString getName()
-        {
-            switch (typeOfValue)
-            {
-            case (SymbolTableEntryType::Empty):
-                return "";
-                break;
-            case (SymbolTableEntryType::Basic):
-                return *value.name_Ptr;
-                break;
-            case (SymbolTableEntryType::Special):
-                return value.specialSymbol_Ptr->name;
-            }
+            delete[] nodesArray;
         }
     };
 
-    class SymbolTable
-    {
-        SymbolTableEntry* data_ArrayPtrOwned;
-        std::hash<std::string> standardHash;
-        int tableSize;
-        int containedItems;
-
-    public:
-        int hashFunction(std::string input)
-        {
-            return standardHash(input) % tableSize;
-        }
-
-        SymbolTable(int capacity)
-        {
-            tableSize = capacity;
-            data_ArrayPtrOwned = new SymbolTableEntry[tableSize];
-            containedItems = 0;
-        }
-
-        ~SymbolTable()
-        {
-            delete[] data_ArrayPtrOwned;
-        }
-    };
+    typedef ListNode* HandleListNode;
 
     union SExpressionUnit
     {
@@ -145,12 +81,15 @@ namespace lisp
         SExpressionUnit* cons;
     };
 
-    class Environment
+    class LispVirtualMachine
     {
     public:
-        SymbolTable symbols;
+        LispListMemory listMemory;
 
-        SymbolString read(std::istream& readStream);
+        LispHandle read(std::istream& readStream);
+        LispHandle readList(std::istream& readStream);
+        LispHandle readSymbol(SymbolChar startChar, std::istream& readStream);
+        LispHandle stringToSymbol(SymbolString name);
     };
 }
 
