@@ -1,7 +1,7 @@
 #ifndef LISP_H_INCLUDED
 #define LISP_H_INCLUDED
 
-#include "bottom_portability_bookend.h"
+#include "platform.h"
 
 #include <iostream>
 #include <list>

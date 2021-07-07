@@ -3,6 +3,8 @@
 
 #define NUM_KEYS 0xffff
 
+#include "platform.h"
+
 namespace input
 {
     typedef void (*keyBoundProcedure) (bool keyIsNowDown);
@@ -10,8 +12,36 @@ namespace input
     extern keyBoundProcedure globalBindings[NUM_KEYS];
     extern bool keyStates[NUM_KEYS];
 
-    enum class Button {q, w, e, a, s, d};
+    class ButtonAction
+    {
+    public:
+        virtual void trigger(bool newButtonState) = 0;
 
+        virtual ~ButtonAction() {};
+    };
+
+    class ButtonContainer
+    {
+    public:
+        bool isDown;
+        ButtonAction* action;
+
+        ButtonContainer(ButtonAction* newAction) : isDown(false), action(newAction) {};
+        ButtonContainer() : isDown(false), action(nullptr) {};
+        ~ButtonContainer() {delete action;}
+
+        void updateState(bool newState) {isDown = newState; action->trigger(newState);}
+    };
+
+    class BindingSet
+    {
+        std::unordered_map<platform::InputCode, ButtonContainer, platform::InputCodeHash> bindings;
+    public:
+        void updateButton(platform::InputCode code, bool newState)
+        {
+            bindings[code].updateState(newState);
+        }
+    };
 }
 
 #endif // INPUT_H_INCLUDED

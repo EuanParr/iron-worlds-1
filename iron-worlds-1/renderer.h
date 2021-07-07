@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "bottom_portability_bookend.h"
+#include "platform.h"
 
 namespace renderer
 {

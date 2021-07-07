@@ -1,23 +1,17 @@
-#include <cmath>
-#include <iostream>
-#include <random>
-#include <windows.h>
-
-#ifndef PLATFORM
-#define PLATFORM_WIN32
-#define PLATFORM
-#else
-#error "Multiple definition of platform in file " + __FILE__
-#endif // PLATFORM
+#include "Win32_main.h"
 
 #include "input.h"
 #include "lisp.h"
 #include "logic.h"
+#include "commonMain.h"
+#include "platform.h"
 #include "scene.h"
 #include "session.h"
 
-matrix::Matrix<float, 4> screenMatrix;
-scene::Scene testScene;
+#include <cmath>
+#include <iostream>
+#include <random>
+#include <windows.h>
 
 void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* renderContextHandle_Ptr)
 {
@@ -136,7 +130,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
 
             float aspectRatio = ((float)newWindowSize.right - newWindowSize.left) / ((float)newWindowSize.bottom - newWindowSize.top);
-            screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
+            //screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
         }
         break;
 
@@ -145,6 +139,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     return 0;
+}
+
+HDC deviceContextHandle;
+MSG msg;
+bool quit = FALSE;
+Win32_PlatformContext testPlat;
+
+void flushToScreen()
+{
+    SwapBuffers(deviceContextHandle);
+}
+
+void checkEvents()
+{
+
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        // handle or dispatch messages
+        if (msg.message == WM_QUIT)
+        {
+            quit = true;
+        }
+        else
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
 }
 
 int WINAPI WinMain(
@@ -164,18 +186,14 @@ int WINAPI WinMain(
 
     WNDCLASSEX windowClassEx;
     HWND windowHandle;
-    HDC deviceContextHandle;
-    HGLRC renderContextHandle;
-    MSG msg;
-    BOOL bQuit = FALSE;
-    float theta = 0.0f;
-    float phi = 34.6f;
 
-    lisp::LispVirtualMachine lispVM;
+    HGLRC renderContextHandle;
+
+    /*lisp::LispVirtualMachine lispVM;
     lispVM.read(std::cin);
 
     session::Session mySession;
-    auto result = mySession.apply0(mySession.read(bottom_portability_bookend::standardLisp));
+    auto result = mySession.apply0(mySession.read(platform::standardLisp));
 
     //std::cout << sizeof(lisp::ListNode) << " is size of list,\n" << sizeof(lisp::BasicSymbol) << " is size of symbol\n";
 
@@ -187,7 +205,7 @@ int WINAPI WinMain(
         std::cout << "--> ";
         mySession.printS(result, std::cout);
         std::cout << "\n";
-    }
+    }*/
 
     // register window class
 
@@ -252,6 +270,8 @@ int WINAPI WinMain(
     matrix::Matrix<double, 4, 1> zBasisMatrix;
     zBasisMatrix.data[2] = 1;
 
+    scene::Scene testScene;
+
     scene::Perspective testPerspective;
     testPerspective.worldDisplacement.data[2] = 50;
     testPerspective.worldAngularDisplacementQuaternion.data[2] = 0.0;
@@ -276,7 +296,7 @@ int WINAPI WinMain(
     }
 
     /* program main loop */
-    while (!bQuit)
+    while (!quit)
     {
         /* check for messages */
         // use if instead of when, so that if a message induces a quit the
@@ -286,7 +306,7 @@ int WINAPI WinMain(
             /* handle or dispatch messages */
             if (msg.message == WM_QUIT)
             {
-                bQuit = TRUE;
+                quit = true;
             }
             else
             {
@@ -296,18 +316,6 @@ int WINAPI WinMain(
         }
         else
         {
-            // set the background colour, black
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-            // clear the buffer, revert colour and depth of each pixel
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            glPushMatrix();
-            glMultMatrixf(screenMatrix.getRaw());
-
-            testScene.draw();
-            testScene.simulateStep(0.1);
-
             double camSpeed = 0.5;
             double camAngularSpeed = 0.02;
 
@@ -353,24 +361,16 @@ int WINAPI WinMain(
                 }
             }
 
+            commonMain::doFrame(flushToScreen, testScene, testPlat);
 
-
-            glPopMatrix();
-
-            SwapBuffers(deviceContextHandle);
-
-            theta += 1.0f;
-            phi += 0.6f;
-
-            // Sleep is provided by WinAPI
-            Sleep(10);
+            platform::sleepForMilliseconds(10);
         }
     }
 
-    /* shutdown OpenGL */
+    // shutdown OpenGL
     DisableOpenGL(windowHandle, deviceContextHandle, renderContextHandle);
 
-    /* destroy the window explicitly */
+    // destroy the window explicitly
     DestroyWindow(windowHandle);
 
     return msg.wParam;
