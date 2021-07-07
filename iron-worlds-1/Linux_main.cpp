@@ -28,6 +28,7 @@ XSetWindowAttributes x11SetWindowAttributes;
 GLXContext x11GlxContext;
 XEvent x11Event;
 bool quit = false;
+long x11EventMask = ExposureMask | ButtonPressMask | KeyPressMask | StructureNotifyMask;
 Linux_PlatformContext testPlat;
 
 void flushToScreen()
@@ -56,7 +57,7 @@ void checkEvents()
                     glViewport(0, 0, x11Event.xconfigure.width,
                         x11Event.xconfigure.height);
                 }
-                bRedraw = true;
+                //bRedraw = true;
 
                 float aspectRatio = ((float)x11Event.xconfigure.width) / ((float)x11Event.xconfigure.height);
                 //screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
@@ -68,7 +69,7 @@ void checkEvents()
                 // for now we process them together on the last one
                 if (x11Event.xexpose.count == 0)
                 {
-                    bRedraw = true;
+                    //bRedraw = true;
                 }
             break;
             case KeyPress:
@@ -76,7 +77,7 @@ void checkEvents()
                 switch (x11Event.xkey.keycode)
                 {
                     case XK_Escape:
-                        bQuit = true;
+                        quit = true;
                     break;
                     case XK_D:
                     case XK_A:
@@ -103,7 +104,7 @@ void checkEvents()
                 switch (x11Event.xkey.keycode)
                 {
                     case XK_Escape:
-                        bQuit = true;
+                        quit = true;
                     break;
                     case XK_D:
                     case XK_A:
@@ -130,8 +131,6 @@ void checkEvents()
 
 int main(int argc, char** argv)
 {
-    long x11EventMask = ExposureMask | ButtonPressMask | KeyPressMask | StructureNotifyMask;
-
     //unsigned long black, white;
 
     // open connection to X server

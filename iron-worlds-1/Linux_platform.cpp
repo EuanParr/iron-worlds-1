@@ -25,6 +25,6 @@ namespace platform
         {XK_Right, InputCode::RightArrow},
         {XK_Left, InputCode::LeftArrow},
         {XK_Up, InputCode::UpArrow},
-        {XK_Space, InputCode::Space},
+        {XK_space, InputCode::Space},
     };
 }
