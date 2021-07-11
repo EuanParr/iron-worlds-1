@@ -22,15 +22,16 @@ namespace input
 
     class ButtonContainer
     {
-    public:
         bool isDown;
         ButtonAction* action;
 
+    public:
         ButtonContainer(ButtonAction* newAction) : isDown(false), action(newAction) {};
         ButtonContainer() : isDown(false), action(nullptr) {};
-        ~ButtonContainer() {delete action;}
+        ~ButtonContainer() {if (action) delete action;}
 
-        void updateState(bool newState) {isDown = newState; action->trigger(newState);}
+        void updateState(bool newState) {isDown = newState; if (action) action->trigger(newState);}
+        bool queryState() {return isDown;}
     };
 
     class BindingSet
@@ -40,7 +41,9 @@ namespace input
         void updateButton(platform::InputCode code, bool newState)
         {
             bindings[code].updateState(newState);
+            LOG(bindings[code].queryState());
         }
+        bool queryState(platform::InputCode code) {return bindings[code].queryState();}
     };
 }
 

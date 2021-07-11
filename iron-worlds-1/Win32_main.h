@@ -1,13 +1,21 @@
 #ifndef WIN32_MAIN_H_INCLUDED
 #define WIN32_MAIN_H_INCLUDED
 
-#include "commonMain.h"
-#include "platform.h"
+#include "common_main.h"
 
-class Win32_PlatformContext : public commonMain::PlatformContext
+namespace Win32_main
 {
-public:
-    void logPlatform() {LOG("Win32");};
-};
+    class Win32_PlatformContext : public common_main::PlatformContext
+    {
+        static std::unordered_map<unsigned int, platform::InputCode> inputCodeMap;
+
+    public:
+        void checkEvents();
+        void flushToScreen();
+        std::unordered_map<unsigned int, platform::InputCode>& getInputCodeMapRef() {return inputCodeMap;}
+        void logPlatform() {LOG("Win32");}
+        void sleepForMilliseconds(int time);
+    };
+}
 
 #endif // WIN32_MAIN_H_INCLUDED

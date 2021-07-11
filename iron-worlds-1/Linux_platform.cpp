@@ -7,11 +7,6 @@
 
 namespace platform
 {
-    void sleepForMilliseconds(int time)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(time));
-    }
-
     std::unordered_map<unsigned int, InputCode> inputCodeMap =
     {
         {XK_A, InputCode::A},
@@ -25,6 +20,7 @@ namespace platform
         {XK_Right, InputCode::RightArrow},
         {XK_Left, InputCode::LeftArrow},
         {XK_Up, InputCode::UpArrow},
+        {XK_Down, InputCode::DownArrow},
         {XK_space, InputCode::Space},
     };
 }

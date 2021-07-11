@@ -6,12 +6,6 @@
 
 namespace platform
 {
-    void sleepForMilliseconds(int time)
-    {
-        if (static_cast<int>(InputCode::A) == 0)
-        Sleep(time);
-    }
-
     std::unordered_map<unsigned int, InputCode> inputCodeMap =
     {
         {0x41, InputCode::A},

@@ -1,13 +1,21 @@
 #ifndef LINUX_MAIN_H_INCLUDED
 #define LINUX_MAIN_H_INCLUDED
 
-#include "commonMain.h"
-#include "platform.h"
+#include "common_main.h"
 
-class Linux_PlatformContext : public commonMain::PlatformContext
+namespace Linux_main
 {
-public:
-    void logPlatform() {LOG("Linux");};
-};
+    class Linux_PlatformContext : public common_main::PlatformContext
+    {
+        static std::unordered_map<unsigned int, platform::InputCode> inputCodeMap;
+
+    public:
+        void checkEvents();
+        void flushToScreen();
+        std::unordered_map<unsigned int, platform::InputCode>& getInputCodeMapRef() {return inputCodeMap;}
+        void logPlatform() {LOG("Linux");}
+        void sleepForMilliseconds(int time);
+    };
+}
 
 #endif // LINUX_MAIN_H_INCLUDED

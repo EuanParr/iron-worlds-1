@@ -150,8 +150,8 @@
 		</Unit>
 		<Unit filename="body.cpp" />
 		<Unit filename="body.h" />
-		<Unit filename="commonMain.cpp" />
-		<Unit filename="commonMain.h" />
+		<Unit filename="common_main.cpp" />
+		<Unit filename="common_main.h" />
 		<Unit filename="input.cpp" />
 		<Unit filename="input.h" />
 		<Unit filename="lisp.cpp" />

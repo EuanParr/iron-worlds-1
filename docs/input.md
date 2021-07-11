@@ -1,0 +1,4 @@
+# Platform Independence
+Ideally, platform-specific code would be in one module, but I don't think it can be that simple. The platform contains the true main function, so it needs to be at the file dependency root. Then above that is the common 'root' - the root of the main platform-independent body of the program.
+
+I think I found a way to do it: the platform root \#includes the common root, which defines a virtual class PlatformContext and a common main function. Then the platform root defines a PlatformContext subclass and in its true main function passes an instance by reference to the common main. 

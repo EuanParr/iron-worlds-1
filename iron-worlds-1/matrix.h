@@ -45,6 +45,7 @@ namespace matrix
 
         ELEMENTTYPE* getRaw() {ELEMENTTYPE* result = data; return result;};
         ELEMENTTYPE* getPtrAt(int i, int j) {return (ELEMENTTYPE*)data + i + M*j;}
+        ELEMENTTYPE& getRefAt(int i, int j) {return data[i + M*j];}
         ELEMENTTYPE getAtConst (int i, int j) const {return data[i + M * j];}
         void loadArray(ELEMENTTYPE* arr)
         {

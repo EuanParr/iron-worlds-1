@@ -3,7 +3,7 @@
 #include "input.h"
 #include "lisp.h"
 #include "logic.h"
-#include "commonMain.h"
+#include "common_main.h"
 #include "platform.h"
 #include "scene.h"
 
@@ -29,104 +29,126 @@ GLXContext x11GlxContext;
 XEvent x11Event;
 bool quit = false;
 long x11EventMask = ExposureMask | ButtonPressMask | KeyPressMask | StructureNotifyMask;
-Linux_PlatformContext testPlat;
+Linux_main::Linux_PlatformContext platformContext;
 
-void flushToScreen()
+namespace Linux_main
 {
-    if (isDoubleBuffer)
+    std::unordered_map<unsigned int, platform::InputCode> input::inputCodeMap
     {
-        glXSwapBuffers(x11Display_Ptr, x11WindowID);
-    }
-    else
-    {
-        glFlush();
-    }
-}
+        {XK_A, platform::InputCode::A},
+        {XK_D, platform::InputCode::D},
+        {XK_E, platform::InputCode::E},
+        {XK_F, platform::InputCode::F},
+        {XK_Q, platform::InputCode::Q},
+        {XK_R, platform::InputCode::R},
+        {XK_S, platform::InputCode::S},
+        {XK_W, platform::InputCode::W},
+        {XK_Right, platform::InputCode::RightArrow},
+        {XK_Left, platform::InputCode::LeftArrow},
+        {XK_Up, platform::InputCode::UpArrow},
+        {XK_Down, platform::InputCode::DownArrow},
+        {XK_space, platform::InputCode::Space},
+    };
 
-void checkEvents()
-{
-    if (XCheckWindowEvent(x11Display_Ptr, x11WindowID, x11EventMask, &x11Event))
+    void Linux_PlatformContext::flushToScreen()
     {
-        switch (x11Event.type)
+        if (isDoubleBuffer)
         {
-            case ConfigureNotify:
-            {
-                // window resizing
-                if (true) // TODO: find function to check if context exists
-                {
-                    glViewport(0, 0, x11Event.xconfigure.width,
-                        x11Event.xconfigure.height);
-                }
-                //bRedraw = true;
-
-                float aspectRatio = ((float)x11Event.xconfigure.width) / ((float)x11Event.xconfigure.height);
-                //screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
-            }
-            break;
-            case Expose:
-                // window became more visible, redraw
-                // count indicates number of expose events to follow
-                // for now we process them together on the last one
-                if (x11Event.xexpose.count == 0)
-                {
-                    //bRedraw = true;
-                }
-            break;
-            case KeyPress:
-            {
-                switch (x11Event.xkey.keycode)
-                {
-                    case XK_Escape:
-                        quit = true;
-                    break;
-                    case XK_D:
-                    case XK_A:
-                    case XK_F:
-                    case XK_R:
-                    case XK_S:
-                    case XK_W:
-                    case XK_Up:
-                    case XK_Down:
-                    case XK_Right:
-                    case XK_Left:
-                    case XK_E:
-                    case XK_Q:
-                    case XK_space:
-                        input::keyStates[x11Event.xkey.keycode] = true;
-                    break;
-                }
-
-            }
-            break;
-
-            case KeyRelease:
-            {
-                switch (x11Event.xkey.keycode)
-                {
-                    case XK_Escape:
-                        quit = true;
-                    break;
-                    case XK_D:
-                    case XK_A:
-                    case XK_F:
-                    case XK_R:
-                    case XK_S:
-                    case XK_W:
-                    case XK_Up:
-                    case XK_Down:
-                    case XK_Right:
-                    case XK_Left:
-                    case XK_E:
-                    case XK_Q:
-                    case XK_space:
-                        input::keyStates[x11Event.xkey.keycode] = False;
-                    break;
-                }
-
-            }
-            break;
+            glXSwapBuffers(x11Display_Ptr, x11WindowID);
+        }
+        else
+        {
+            glFlush();
         }
     }
+
+    void Linux_PlatformContext::sleepForMilliseconds(int time)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(time));
+    }
+
+    void Linux_PlatformContext::checkEvents()
+    {
+        if (XCheckWindowEvent(x11Display_Ptr, x11WindowID, x11EventMask, &x11Event))
+        {
+            switch (x11Event.type)
+            {
+                case Expose:
+                    // window became more visible, redraw
+                    // count indicates number of expose events to follow
+                    // for now we process them together on the last one
+                    if (x11Event.xexpose.count == 0)
+                    {
+                        //bRedraw = true;
+                    }
+                break;
+
+                case KeyPress:
+                {
+                    switch (x11Event.xkey.keycode)
+                    {
+                        case XK_Escape:
+                            quit = true;
+                        break;
+                        case XK_D:
+                        case XK_A:
+                        case XK_F:
+                        case XK_R:
+                        case XK_S:
+                        case XK_W:
+                        case XK_Up:
+                        case XK_Down:
+                        case XK_Right:
+                        case XK_Left:
+                        case XK_E:
+                        case XK_Q:
+                        case XK_space:
+                            input::keyStates[x11Event.xkey.keycode] = true;
+                        break;
+                    }
+
+                    platformContext.updateButtonInput(x11Event.xkey.keycode, true);
+                }
+                break;
+
+                case KeyRelease:
+                {
+                    switch (x11Event.xkey.keycode)
+                    {
+                        case XK_Escape:
+                            quit = true;
+                        break;
+                        case XK_D:
+                        case XK_A:
+                        case XK_F:
+                        case XK_R:
+                        case XK_S:
+                        case XK_W:
+                        case XK_Up:
+                        case XK_Down:
+                        case XK_Right:
+                        case XK_Left:
+                        case XK_E:
+                        case XK_Q:
+                        case XK_space:
+                            input::keyStates[x11Event.xkey.keycode] = False;
+                        break;
+                    }
+
+                    platformContext.updateButtonInput(x11Event.xkey.keycode, false);
+                }
+                break;
+
+                case ConfigureNotify:
+                {
+                    // window resizing
+                    platformContext.updateViewPort(x11Event.xconfigure.width, x11Event.xconfigure.height);
+                }
+                break;
+            }
+        }
+    }
+
 }
 
 int main(int argc, char** argv)
@@ -209,8 +231,6 @@ int main(int argc, char** argv)
     //XClearWindow(x11Display_Ptr, x11WindowID);
     //XMapRaised(x11Display_Ptr, x11WindowID);
 
-    bool bRedraw = true;
-
     glEnable(GL_DEPTH_TEST);
 
     matrix::Matrix<double, 4, 1> xBasisMatrix;
@@ -240,24 +260,19 @@ int main(int argc, char** argv)
         newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
         newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
         newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
-        /*newBody.angularVelocityQuaternion.data[0] = 1 * k;
-        newBody.angularVelocityQuaternion.data[1] = 1 * k;
-        newBody.angularVelocityQuaternion.data[2] = 1 * k;*/
         newBody.angularVelocityQuaternion.normalise();
         newBody.myShape = new renderer::Cube();
         testScene.bodies.push_back(newBody);
     }
 
-    /* program main loop */
+    double camSpeed = 0.5;
+    double camAngularSpeed = 0.02;
+
+    // program main loop
     while (!quit)
     {
-        bRedraw = false;
         // check for messages
-
-        checkEvents();
-
-        double camSpeed = 0.5;
-        double camAngularSpeed = 0.02;
+        platformContext.checkEvents();
 
         matrix::Matrix<double, 3, 1> cameraMover;
 
@@ -301,9 +316,7 @@ int main(int argc, char** argv)
             }
         }
 
-        commonMain::doFrame(flushToScreen, testScene, testPlat);
-
-        platform::sleepForMilliseconds(10);
+        common_main::main(testScene, platformContext);
     }
 
     return 0;

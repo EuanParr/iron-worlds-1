@@ -3,7 +3,7 @@
 #include "input.h"
 #include "lisp.h"
 #include "logic.h"
-#include "commonMain.h"
+#include "common_main.h"
 #include "platform.h"
 #include "scene.h"
 #include "session.h"
@@ -12,6 +12,59 @@
 #include <iostream>
 #include <random>
 #include <windows.h>
+
+HDC deviceContextHandle;
+MSG msg;
+bool quit = FALSE;
+Win32_main::Win32_PlatformContext platformContext;
+
+namespace Win32_main
+{
+    std::unordered_map<unsigned int, platform::InputCode> Win32_PlatformContext::inputCodeMap
+    {
+        {0x41, platform::InputCode::A},
+        {0x44, platform::InputCode::D},
+        {0x45, platform::InputCode::E},
+        {0x46, platform::InputCode::F},
+        {0x51, platform::InputCode::Q},
+        {0x52, platform::InputCode::R},
+        {0x53, platform::InputCode::S},
+        {0x57, platform::InputCode::W},
+        {VK_RIGHT, platform::InputCode::RightArrow},
+        {VK_LEFT, platform::InputCode::LeftArrow},
+        {VK_UP, platform::InputCode::UpArrow},
+        {VK_DOWN, platform::InputCode::DownArrow},
+        {VK_SPACE, platform::InputCode::Space},
+    };
+
+    void Win32_PlatformContext::flushToScreen()
+    {
+        SwapBuffers(deviceContextHandle);
+    }
+
+    void Win32_PlatformContext::sleepForMilliseconds(int time)
+    {
+        Sleep(time);
+    }
+
+    void Win32_PlatformContext::checkEvents()
+    {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            // handle or dispatch messages
+            if (msg.message == WM_QUIT)
+            {
+                quit = true;
+            }
+            else
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+    }
+
+}
 
 void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* renderContextHandle_Ptr)
 {
@@ -22,7 +75,7 @@ void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* render
     // Set the HDC, note that it was passed by pointer
     *deviceContextHandle_Ptr = GetDC(windowHandle);
 
-    /* set the pixel format for the DC */
+    // set the pixel format for the DC
     // ZeroMemory is provided by WinAPI
     ZeroMemory(&pixelFormatDescriptor, sizeof(pixelFormatDescriptor));
 
@@ -39,7 +92,7 @@ void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* render
 
     SetPixelFormat(*deviceContextHandle_Ptr, pixelFormat, &pixelFormatDescriptor);
 
-    /* create and enable the render context (RC) */
+    // create and enable the render context (RC)
     *renderContextHandle_Ptr = wglCreateContext(*deviceContextHandle_Ptr);
 
     wglMakeCurrent(*deviceContextHandle_Ptr, *renderContextHandle_Ptr);
@@ -90,6 +143,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 break;
             }
 
+            platformContext.updateButtonInput(wParam, true);
         }
         break;
 
@@ -117,6 +171,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 break;
             }
 
+            platformContext.updateButtonInput(wParam, false);
         }
         break;
 
@@ -124,49 +179,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             RECT newWindowSize;
             GetClientRect(hwnd, &newWindowSize);
-            if (wglGetCurrentContext())
-            {
-                glViewport(0, 0, newWindowSize.right - newWindowSize.left, newWindowSize.bottom - newWindowSize.top);
-            }
-
-            float aspectRatio = ((float)newWindowSize.right - newWindowSize.left) / ((float)newWindowSize.bottom - newWindowSize.top);
-            //screenMatrix = matrix::makeScale(1.0f / aspectRatio, 1.0f, 1.0f);
+            platformContext.updateViewPort(newWindowSize.right - newWindowSize.left, newWindowSize.bottom - newWindowSize.top);
         }
         break;
 
         default:
+        {
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        }
     }
 
     return 0;
-}
-
-HDC deviceContextHandle;
-MSG msg;
-bool quit = FALSE;
-Win32_PlatformContext testPlat;
-
-void flushToScreen()
-{
-    SwapBuffers(deviceContextHandle);
-}
-
-void checkEvents()
-{
-
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-    {
-        // handle or dispatch messages
-        if (msg.message == WM_QUIT)
-        {
-            quit = true;
-        }
-        else
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
 }
 
 int WINAPI WinMain(
@@ -295,76 +318,56 @@ int WINAPI WinMain(
         testScene.bodies.push_back(newBody);
     }
 
-    /* program main loop */
+    double camSpeed = 0.5;
+    double camAngularSpeed = 0.02;
+
+    // program main loop
     while (!quit)
     {
-        /* check for messages */
-        // use if instead of when, so that if a message induces a quit the
-        // process quits immediately
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        // check for messages
+        platformContext.checkEvents();
+
+        /*matrix::Matrix<double, 3, 1> cameraMover;
+
+        if (input::keyStates[0x41])
+            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
+        if (input::keyStates[0x44])
+            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
+        if (input::keyStates[0x46])
+            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
+        if (input::keyStates[0x52])
+            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
+        if (input::keyStates[0x53])
+            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
+        if (input::keyStates[0x57])
+            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
+
+        testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
+
+        if (input::keyStates[VK_UP])
+            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+        if (input::keyStates[VK_DOWN])
+            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+        if (input::keyStates[VK_LEFT])
+            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+        if (input::keyStates[VK_RIGHT])
+            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+        if (input::keyStates[0x45])
+            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+        if (input::keyStates[0x51])
+            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+        if (input::keyStates[VK_SPACE])
         {
-            /* handle or dispatch messages */
-            if (msg.message == WM_QUIT)
+            for (body::Body& newBody : testScene.bodies)
             {
-                quit = true;
+                newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
+                newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
+                newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
+                newBody.angularVelocityQuaternion.normalise();
             }
-            else
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-        else
-        {
-            double camSpeed = 0.5;
-            double camAngularSpeed = 0.02;
+        }*/
 
-            matrix::Matrix<double, 3, 1> cameraMover;
-
-            if (input::keyStates[0x41])
-                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
-            if (input::keyStates[0x44])
-                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
-            if (input::keyStates[0x46])
-                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
-            if (input::keyStates[0x52])
-                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
-            if (input::keyStates[0x53])
-                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
-            if (input::keyStates[0x57])
-                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
-
-            testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
-
-            if (input::keyStates[VK_UP])
-                //std::cout << "moving\n";
-                //std::cout << rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed);
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_DOWN])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_LEFT])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_RIGHT])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[0x45])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[0x51])
-                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (input::keyStates[VK_SPACE])
-            {
-                for (body::Body& newBody : testScene.bodies)
-                {
-                    newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
-                    newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
-                    newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
-                    newBody.angularVelocityQuaternion.normalise();
-                }
-            }
-
-            commonMain::doFrame(flushToScreen, testScene, testPlat);
-
-            platform::sleepForMilliseconds(10);
-        }
+        common_main::main(testScene, platformContext);
     }
 
     // shutdown OpenGL
