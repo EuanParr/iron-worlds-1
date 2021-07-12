@@ -7,9 +7,11 @@
 #include "platform.h"
 #include "scene.h"
 
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <thread>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
@@ -28,21 +30,21 @@ XSetWindowAttributes x11SetWindowAttributes;
 GLXContext x11GlxContext;
 XEvent x11Event;
 bool quit = false;
-long x11EventMask = ExposureMask | ButtonPressMask | KeyPressMask | StructureNotifyMask;
+long x11EventMask = ExposureMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask;
 Linux_main::Linux_PlatformContext platformContext;
 
 namespace Linux_main
 {
-    std::unordered_map<unsigned int, platform::InputCode> input::inputCodeMap
+    std::unordered_map<unsigned int, platform::InputCode> Linux_PlatformContext::inputCodeMap
     {
-        {XK_A, platform::InputCode::A},
-        {XK_D, platform::InputCode::D},
-        {XK_E, platform::InputCode::E},
-        {XK_F, platform::InputCode::F},
-        {XK_Q, platform::InputCode::Q},
-        {XK_R, platform::InputCode::R},
-        {XK_S, platform::InputCode::S},
-        {XK_W, platform::InputCode::W},
+        {XK_a, platform::InputCode::A},
+        {XK_d, platform::InputCode::D},
+        {XK_e, platform::InputCode::E},
+        {XK_f, platform::InputCode::F},
+        {XK_q, platform::InputCode::Q},
+        {XK_r, platform::InputCode::R},
+        {XK_s, platform::InputCode::S},
+        {XK_w, platform::InputCode::W},
         {XK_Right, platform::InputCode::RightArrow},
         {XK_Left, platform::InputCode::LeftArrow},
         {XK_Up, platform::InputCode::UpArrow},
@@ -106,8 +108,10 @@ namespace Linux_main
                             input::keyStates[x11Event.xkey.keycode] = true;
                         break;
                     }
-
-                    platformContext.updateButtonInput(x11Event.xkey.keycode, true);
+                    LOG("q xcode: " << XK_Q);
+                    LOG("keycode: " << x11Event.xkey.keycode);
+                    LOG("keysym: " << XLookupKeysym(&x11Event.xkey, 0));
+                    platformContext.updateButtonInput(XLookupKeysym(&x11Event.xkey, 0), true);
                 }
                 break;
 
@@ -134,8 +138,9 @@ namespace Linux_main
                             input::keyStates[x11Event.xkey.keycode] = False;
                         break;
                     }
-
-                    platformContext.updateButtonInput(x11Event.xkey.keycode, false);
+                    LOG("keycode: " << x11Event.xkey.keycode);
+                    LOG("keysym: " << XLookupKeysym(&x11Event.xkey, 0));
+                    platformContext.updateButtonInput(XLookupKeysym(&x11Event.xkey, 0), false);
                 }
                 break;
 
@@ -276,7 +281,7 @@ int main(int argc, char** argv)
 
         matrix::Matrix<double, 3, 1> cameraMover;
 
-        if (input::keyStates[XK_A])
+        /*if (input::keyStates[XK_A])
             cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
         if (input::keyStates[XK_D])
             cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
@@ -314,7 +319,7 @@ int main(int argc, char** argv)
                 newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
                 newBody.angularVelocityQuaternion.normalise();
             }
-        }
+        }*/
 
         common_main::main(testScene, platformContext);
     }

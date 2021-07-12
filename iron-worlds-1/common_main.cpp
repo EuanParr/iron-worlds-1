@@ -36,6 +36,7 @@ namespace common_main
         matrix::Matrix<double, 3, 1> cameraMover;
 
         if (context.bindings.queryState(platform::InputCode::A))
+            //LOG("A");
             cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
         if (context.bindings.queryState(platform::InputCode::D))
             cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);

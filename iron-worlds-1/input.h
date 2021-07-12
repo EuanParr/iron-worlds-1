@@ -41,7 +41,8 @@ namespace input
         void updateButton(platform::InputCode code, bool newState)
         {
             bindings[code].updateState(newState);
-            LOG(bindings[code].queryState());
+            LOG("common code: " << (unsigned int)code);
+            LOG("state: " << bindings[code].queryState());
         }
         bool queryState(platform::InputCode code) {return bindings[code].queryState();}
     };
