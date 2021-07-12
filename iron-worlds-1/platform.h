@@ -42,7 +42,7 @@ namespace platform
 
     enum class InputCode : unsigned int
     {
-        A, D, E, F, Q, R, S, W, RightArrow, LeftArrow, UpArrow, DownArrow, Space
+        A, D, E, F, Q, R, S, W, RightArrow, LeftArrow, UpArrow, DownArrow, Space, Escape
     };
 
     struct InputCodeHash

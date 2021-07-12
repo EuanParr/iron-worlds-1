@@ -18,9 +18,22 @@ namespace common_main
         screenMatrix = matrix::makeScale((float)newHeight / (float)newWidth, 1.0f, 1.0f);
     }
 
-    int main(scene::Scene& sceneRef,
-                 PlatformContext& context)
+    int main(PlatformContext& context)
     {
+        scene::Scene testScene;
+
+        scene::Perspective testPerspective;
+        testPerspective.worldDisplacement.data[2] = 50;
+        testPerspective.worldAngularDisplacementQuaternion.data[2] = 0.0;
+
+        testScene.perspectives.push_back(testPerspective);
+        testScene.currentPerspective_PtrWeak = &testScene.perspectives.front();
+
+        context.bindings.bindings[platform::InputCode::Escape].setAction(new input::LambdaButtonAction([&] (bool down) {if (down) context.quit = true;}));
+
+        // set the background colour, black
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
         double k = 0.1;
 
         double camSpeed = 0.5;
@@ -33,66 +46,81 @@ namespace common_main
         matrix::Matrix<double, 4, 1> zBasisMatrix;
         zBasisMatrix.data[2] = 1;
 
-        matrix::Matrix<double, 3, 1> cameraMover;
-
-        if (context.bindings.queryState(platform::InputCode::A))
-            //LOG("A");
-            cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
-        if (context.bindings.queryState(platform::InputCode::D))
-            cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
-        if (context.bindings.queryState(platform::InputCode::F))
-            cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
-        if (context.bindings.queryState(platform::InputCode::R))
-            cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
-        if (context.bindings.queryState(platform::InputCode::S))
-            cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
-        if (context.bindings.queryState(platform::InputCode::W))
-            cameraMover.smashMatrix(sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
-
-        sceneRef.currentPerspective_PtrWeak->worldDisplacement = sceneRef.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
-
-        if (context.bindings.queryState(platform::InputCode::UpArrow))
-            sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (context.bindings.queryState(platform::InputCode::DownArrow))
-            sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (context.bindings.queryState(platform::InputCode::LeftArrow))
-            sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (context.bindings.queryState(platform::InputCode::RightArrow))
-            sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (context.bindings.queryState(platform::InputCode::E))
-            sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (context.bindings.queryState(platform::InputCode::Q))
-            sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * sceneRef.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (context.bindings.queryState(platform::InputCode::Space))
+        for (int i = 0; i < 100; i++)
         {
-            for (body::Body& newBody : sceneRef.bodies)
-            {
-                newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
-                newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
-                newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
-                newBody.angularVelocityQuaternion.normalise();
-            }
+            body::Body newBody;
+            newBody.velocity.data[0] = logic::unitRand();
+            newBody.velocity.data[1] = logic::unitRand();
+            newBody.velocity.data[2] = logic::unitRand();
+            newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
+            newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
+            newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
+            newBody.angularVelocityQuaternion.normalise();
+            newBody.myShape = new renderer::Cube();
+            testScene.bodies.push_back(newBody);
         }
 
-        // set the background colour, black
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        while (!context.quit)
+        {
+            context.checkEvents();
 
-        // clear the buffer, revert colour and depth of each pixel
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            matrix::Matrix<double, 3, 1> cameraMover;
 
-        //context.logPlatform();
+            if (context.bindings.queryState(platform::InputCode::A))
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
+            if (context.bindings.queryState(platform::InputCode::D))
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
+            if (context.bindings.queryState(platform::InputCode::F))
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
+            if (context.bindings.queryState(platform::InputCode::R))
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
+            if (context.bindings.queryState(platform::InputCode::S))
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
+            if (context.bindings.queryState(platform::InputCode::W))
+                cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
 
-        glPushMatrix();
-        glMultMatrixf(context.getScreenMatrixRef().getRaw());
+            testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
 
-        sceneRef.draw();
-        sceneRef.simulateStep(0.1);
+            if (context.bindings.queryState(platform::InputCode::UpArrow))
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (context.bindings.queryState(platform::InputCode::DownArrow))
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (context.bindings.queryState(platform::InputCode::LeftArrow))
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (context.bindings.queryState(platform::InputCode::RightArrow))
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (context.bindings.queryState(platform::InputCode::E))
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (context.bindings.queryState(platform::InputCode::Q))
+                testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
+            if (context.bindings.queryState(platform::InputCode::Space))
+            {
+                for (body::Body& newBody : testScene.bodies)
+                {
+                    newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
+                    newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
+                    newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
+                    newBody.angularVelocityQuaternion.normalise();
+                }
+            }
 
-        glPopMatrix();
+            // clear the buffer, revert colour and depth of each pixel
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        context.flushToScreen();
+            //context.logPlatform();
 
-        context.sleepForMilliseconds(10);
+            glPushMatrix();
+            glMultMatrixf(context.getScreenMatrixRef().getRaw());
+
+            testScene.draw();
+            testScene.simulateStep(0.1);
+
+            glPopMatrix();
+
+            context.flushToScreen();
+
+            context.sleepForMilliseconds(10);
+        }
 
         return 0;
     }

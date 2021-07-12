@@ -50,6 +50,7 @@ namespace Linux_main
         {XK_Up, platform::InputCode::UpArrow},
         {XK_Down, platform::InputCode::DownArrow},
         {XK_space, platform::InputCode::Space},
+        {XK_Escape, platform::InputCode::Escape},
     };
 
     void Linux_PlatformContext::flushToScreen()
@@ -75,71 +76,14 @@ namespace Linux_main
         {
             switch (x11Event.type)
             {
-                case Expose:
-                    // window became more visible, redraw
-                    // count indicates number of expose events to follow
-                    // for now we process them together on the last one
-                    if (x11Event.xexpose.count == 0)
-                    {
-                        //bRedraw = true;
-                    }
-                break;
-
                 case KeyPress:
                 {
-                    switch (x11Event.xkey.keycode)
-                    {
-                        case XK_Escape:
-                            quit = true;
-                        break;
-                        case XK_D:
-                        case XK_A:
-                        case XK_F:
-                        case XK_R:
-                        case XK_S:
-                        case XK_W:
-                        case XK_Up:
-                        case XK_Down:
-                        case XK_Right:
-                        case XK_Left:
-                        case XK_E:
-                        case XK_Q:
-                        case XK_space:
-                            input::keyStates[x11Event.xkey.keycode] = true;
-                        break;
-                    }
-                    LOG("q xcode: " << XK_Q);
-                    LOG("keycode: " << x11Event.xkey.keycode);
-                    LOG("keysym: " << XLookupKeysym(&x11Event.xkey, 0));
                     platformContext.updateButtonInput(XLookupKeysym(&x11Event.xkey, 0), true);
                 }
                 break;
 
                 case KeyRelease:
                 {
-                    switch (x11Event.xkey.keycode)
-                    {
-                        case XK_Escape:
-                            quit = true;
-                        break;
-                        case XK_D:
-                        case XK_A:
-                        case XK_F:
-                        case XK_R:
-                        case XK_S:
-                        case XK_W:
-                        case XK_Up:
-                        case XK_Down:
-                        case XK_Right:
-                        case XK_Left:
-                        case XK_E:
-                        case XK_Q:
-                        case XK_space:
-                            input::keyStates[x11Event.xkey.keycode] = False;
-                        break;
-                    }
-                    LOG("keycode: " << x11Event.xkey.keycode);
-                    LOG("keysym: " << XLookupKeysym(&x11Event.xkey, 0));
                     platformContext.updateButtonInput(XLookupKeysym(&x11Event.xkey, 0), false);
                 }
                 break;
@@ -214,115 +158,11 @@ int main(int argc, char** argv)
 
     // request displaying window
     XMapWindow(x11Display_Ptr, x11WindowID);
-
-    //x11ScreenID = DefaultScreen(x11Display_Ptr);
-    //black = BlackPixel(x11Display_Ptr, x11ScreenID);
-    //white = WhitePixel(x11Display_Ptr, x11ScreenID);
-
-    //x11WindowID = XCreateSimpleWindow(
-    //    x11Display_Ptr, DefaultRootWindow(x11Display_Ptr),
-    //    0, 0, 200, 300, 5, white, black);
-
-    //XSetStandardProperties(x11Display_Ptr, x11WindowID,
-    //    "Iron Worlds 1", "Iron Worlds 1", None, nullptr, 0, nullptr);
-
     XSelectInput(x11Display_Ptr, x11WindowID, x11EventMask);
-
-    //x11GraphicsContext = XCreateGC(x11Display_Ptr, x11WindowID, 0, 0);
-
-    //XSetBackground(x11Display_Ptr, x11GraphicsContext, white);
-    //XSetForeground(x11Display_Ptr, x11GraphicsContext, black);
-
-    //XClearWindow(x11Display_Ptr, x11WindowID);
-    //XMapRaised(x11Display_Ptr, x11WindowID);
 
     glEnable(GL_DEPTH_TEST);
 
-    matrix::Matrix<double, 4, 1> xBasisMatrix;
-    xBasisMatrix.data[0] = 1;
-    matrix::Matrix<double, 4, 1> yBasisMatrix;
-    yBasisMatrix.data[1] = 1;
-    matrix::Matrix<double, 4, 1> zBasisMatrix;
-    zBasisMatrix.data[2] = 1;
-
-    scene::Scene testScene;
-
-    scene::Perspective testPerspective;
-    testPerspective.worldDisplacement.data[2] = 50;
-    testPerspective.worldAngularDisplacementQuaternion.data[2] = 0.0;
-
-    testScene.perspectives.push_back(testPerspective);
-    testScene.currentPerspective_PtrWeak = &testScene.perspectives.front();
-
-    double k = 0.1;
-
-    for (int i = 0; i < 100; i++)
-    {
-        body::Body newBody;
-        newBody.velocity.data[0] = logic::unitRand();
-        newBody.velocity.data[1] = logic::unitRand();
-        newBody.velocity.data[2] = logic::unitRand();
-        newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
-        newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
-        newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
-        newBody.angularVelocityQuaternion.normalise();
-        newBody.myShape = new renderer::Cube();
-        testScene.bodies.push_back(newBody);
-    }
-
-    double camSpeed = 0.5;
-    double camAngularSpeed = 0.02;
-
-    // program main loop
-    while (!quit)
-    {
-        // check for messages
-        platformContext.checkEvents();
-
-        matrix::Matrix<double, 3, 1> cameraMover;
-
-        /*if (input::keyStates[XK_A])
-            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
-        if (input::keyStates[XK_D])
-            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
-        if (input::keyStates[XK_F])
-            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
-        if (input::keyStates[XK_R])
-            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
-        if (input::keyStates[XK_S])
-            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
-        if (input::keyStates[XK_W])
-            cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
-
-        testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
-
-        if (input::keyStates[XK_Up])
-            //std::cout << "moving\n";
-            //std::cout << rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed);
-            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (input::keyStates[XK_Down])
-            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (input::keyStates[XK_Left])
-            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (input::keyStates[XK_Right])
-            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (input::keyStates[XK_E])
-            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (input::keyStates[XK_Q])
-            testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-        if (input::keyStates[XK_space])
-        {
-            for (body::Body& newBody : testScene.bodies)
-            {
-                newBody.angularVelocityQuaternion.data[0] = logic::unitRand() * k;
-                newBody.angularVelocityQuaternion.data[1] = logic::unitRand() * k;
-                newBody.angularVelocityQuaternion.data[2] = logic::unitRand() * k;
-                newBody.angularVelocityQuaternion.normalise();
-            }
-        }*/
-
-        common_main::main(testScene, platformContext);
-    }
+    common_main::main(latformContext);
 
     return 0;
 }

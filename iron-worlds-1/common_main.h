@@ -13,6 +13,7 @@ namespace common_main
 
     public:
         input::BindingSet bindings;
+        bool quit = false;
 
         virtual ~PlatformContext() {};
 
@@ -27,7 +28,7 @@ namespace common_main
         virtual void sleepForMilliseconds(int time) = 0;
     };
 
-    int main(scene::Scene& sceneRef, PlatformContext& context);
+    int main(PlatformContext& context);
 }
 
 #endif // TOP_PORTABILITY_BOOKEND_H_INCLUDED

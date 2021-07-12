@@ -29,11 +29,12 @@
 1624871395 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\rotation.h
 	"matrix.h"
 
-1620731980 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.cpp
+1626128109 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.cpp
 	"input.h"
 
-1626043740 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.h
+1626128446 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\input.h
 	"platform.h"
+	"functional"
 
 1624871395 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\lisp.cpp
 	"lisp.h"
@@ -208,7 +209,7 @@
 	<string>
 	<memory>
 
-1626045130 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_main.cpp
+1626130337 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\win32_main.cpp
 	"Win32_main.h"
 	"input.h"
 	"lisp.h"
@@ -236,7 +237,7 @@
 	"session.h"
 	<functional>
 
-1625066908 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\platform.h
+1626127520 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\platform.h
 	"Linux_platform.h"
 	"Win32_platform.h"
 	<fstream>
@@ -273,12 +274,13 @@
 1625679642 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\commonmain.h
 	"scene.h"
 
-1625932144 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\common_main.cpp
+1626128874 source:c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\common_main.cpp
 	"common_main.h"
 	"input.h"
+	"logic.h"
 	"scene.h"
 
-1626016202 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\common_main.h
+1626124728 c:\users\euan parr\github\iron-worlds-1\iron-worlds-1\common_main.h
 	"input.h"
 	"platform.h"
 	"scene.h"
