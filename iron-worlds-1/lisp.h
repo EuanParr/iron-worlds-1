@@ -14,45 +14,46 @@ namespace lisp
     typedef std::string SymbolString;
 
     struct ListNode;
-    struct BasicSymbol;
+    struct Symbol;
 
-    union LispTypePtr_Uni
+    struct LispHandle
     {
-        // a pointer to one of the Lisp entity types
-        ListNode* listNode;
-        BasicSymbol* basicSymbol;
-    };
+        // tagged union
 
-    enum class LispTypeFlag : char
-    {
-        // specifies a Lisp entity type
-        ListT = 0,
-        BasicSymbolT = 1,
+        enum : char
+        {
+            // specifies a Lisp entity type
+            ListT = 0,
+            BasicSymbolT = 1,
+        } flag;
+
+        union
+        {
+            // a pointer to one of the Lisp entity types
+            ListNode* listNode;
+            Symbol* basicSymbol;
+        };
+
     };
 
     struct ListNode
     {
         // Points to 2 Lisp entities and remembers their types
-        LispTypeFlag firstFlags;
-        LispTypeFlag secondFlags;
-
-        LispTypePtr_Uni firstValue;
-        LispTypePtr_Uni secondValue;
+        LispHandle first, second;
     };
 
-    struct LispHandle
-    {
-        // Points to a Lisp entity and remembers its type
-        LispTypeFlag flags;
-        LispTypePtr_Uni value;
-    };
 
-    struct BasicSymbol
+
+    struct Symbol
     {
+        // holds its name and a typed union pointer to its lookup value
         SymbolString name;
-        LispTypeFlag valueFlags;
-        LispTypePtr_Uni value;
+        std::vector<LispHandle> bindingStack;
+
+        Symbol(SymbolString newName) : name(newName) {}
     };
+
+    std::ostream& operator<<(std::ostream& output, const Symbol& sym);
 
     class LispListMemory
     {
@@ -75,11 +76,42 @@ namespace lisp
 
     typedef ListNode* HandleListNode;
 
-    class LispVirtualMachine
+    class ExecutionStackFrame
     {
+        ExecutionStackFrame* nextFrame_PtrWeak = nullptr;
+        std::vector<Symbol*> boundSymbols;
     public:
-        LispListMemory listMemory;
+        ExecutionStackFrame(ExecutionStackFrame* next) : nextFrame_PtrWeak(next) {}
+        ~ExecutionStackFrame();
 
+        ExecutionStackFrame* getNext() {return nextFrame_PtrWeak;}
+        void registerBinding(Symbol* key);
+    };
+
+    class ExecutionStack
+    {
+        ExecutionStackFrame* topFrame_Ptr = nullptr;
+
+    public:
+        ~ExecutionStack();
+
+        void bind(Symbol* key, LispHandle value);
+        void pop_back();
+        void push_back();
+    };
+
+    class VirtualMachine
+    {
+        ExecutionStack exStack;
+        LispListMemory listMemory;
+        std::unordered_map<SymbolString, Symbol> symbolTable;
+        Symbol* atomNil;
+
+        public:
+        VirtualMachine();
+        ~VirtualMachine();
+
+        void print(LispHandle expr, std::ostream& printStream);
         LispHandle read(std::istream& readStream);
         LispHandle readList(std::istream& readStream);
         LispHandle readSymbol(SymbolChar startChar, std::istream& readStream);

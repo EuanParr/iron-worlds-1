@@ -32,6 +32,12 @@
 #include "Win32_platform.h"
 #endif // PLATFORM_WIN32
 
+#ifdef DEBUG
+#else
+#define NDEBUG
+#endif // DEBUG
+
+#include <assert.h>
 #include <fstream>
 #include <iostream>
 #include <unordered_map>

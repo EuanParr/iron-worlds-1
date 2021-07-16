@@ -220,11 +220,5 @@ int WINAPI WinMain(
 
     common_main::main(platformContext);
 
-    // shutdown OpenGL
-    DisableOpenGL(windowHandle, deviceContextHandle, renderContextHandle);
-
-    // destroy the window explicitly
-    DestroyWindow(windowHandle);
-
     return 0;
 }

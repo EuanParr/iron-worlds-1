@@ -1,8 +1,11 @@
 #include "common_main.h"
 
 #include "input.h"
+#include "lisp.h"
 #include "logic.h"
 #include "scene.h"
+
+#include <thread>
 
 namespace common_main
 {
@@ -16,6 +19,12 @@ namespace common_main
     {
         glViewport(0, 0, newWidth, newHeight);
         screenMatrix = matrix::makeScale((float)newHeight / (float)newWidth, 1.0f, 1.0f);
+    }
+
+    void lispThreadFunc()
+    {
+        lisp::VirtualMachine lispVM;
+        lispVM.read(std::cin);
     }
 
     int main(PlatformContext& context)
@@ -59,6 +68,8 @@ namespace common_main
             newBody.myShape = new renderer::Cube();
             testScene.bodies.push_back(newBody);
         }
+
+        std::thread lispThread(lispThreadFunc);
 
         while (!context.quit)
         {
@@ -121,6 +132,8 @@ namespace common_main
 
             context.sleepForMilliseconds(10);
         }
+
+        lispThread.join();
 
         return 0;
     }
