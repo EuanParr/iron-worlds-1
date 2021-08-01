@@ -24,7 +24,13 @@ namespace common_main
     void lispThreadFunc()
     {
         lisp::VirtualMachine lispVM;
-        lispVM.read(std::cin);
+        //lispVM.print(lispVM.read(std::cin), std::cout);
+        lisp::SymbolString s;
+        while (s != "quit")
+        {
+            s = lispVM.readToken(std::cin);
+            LOG(s);
+        }
     }
 
     int main(PlatformContext& context)

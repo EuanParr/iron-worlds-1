@@ -23,9 +23,10 @@ namespace lisp
         enum : char
         {
             // specifies a Lisp entity type
-            ListT = 0,
-            BasicSymbolT = 1,
-        } flag;
+            NullT = 0,
+            ListT = 1,
+            BasicSymbolT = 2,
+        } tag;
 
         union
         {
@@ -57,20 +58,39 @@ namespace lisp
 
     class LispListMemory
     {
-    public:
-        ListNode* nodesArray;
-        unsigned int arraySize;
-        unsigned int defaultSize = 0x10000;
+        // this pointer is a
+        ListNode* nodesArray_Ptr;
+        size_t arraySize = 0;
+        size_t defaultSize = 0x10000;
+        size_t nextFree = 0;
 
+    public:
         LispListMemory()
         {
             arraySize = defaultSize;
-            nodesArray = new ListNode[arraySize];
+            nodesArray_Ptr = new ListNode[arraySize];
         }
 
         ~LispListMemory()
         {
-            delete[] nodesArray;
+            delete[] nodesArray_Ptr;
+        }
+
+        ListNode* construct(LispHandle first, LispHandle second)
+        {
+            if (nextFree < arraySize)
+            {
+                ListNode* result_Ptr = nodesArray_Ptr + nextFree;
+                result_Ptr->first = first;
+                result_Ptr->second = second;
+                nextFree++;
+                return result_Ptr;
+            }
+            else
+            {
+                ELOG("out of memory");
+                return nullptr;
+            }
         }
     };
 
@@ -114,7 +134,8 @@ namespace lisp
         void print(LispHandle expr, std::ostream& printStream);
         LispHandle read(std::istream& readStream);
         LispHandle readList(std::istream& readStream);
-        LispHandle readSymbol(SymbolChar startChar, std::istream& readStream);
+        LispHandle readSymbol(SymbolChar& currentChar, std::istream& readStream);
+        SymbolString readToken(std::istream& readStream);
         LispHandle stringToSymbol(SymbolString name);
     };
 }

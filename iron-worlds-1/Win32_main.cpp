@@ -50,7 +50,7 @@ namespace Win32_main
 
     void Win32_PlatformContext::checkEvents()
     {
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
             // handle or dispatch messages
             if (msg.message == WM_QUIT)
@@ -101,7 +101,7 @@ void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* render
 
 void DisableOpenGL (HWND hwnd, HDC hDC, HGLRC hRC)
 {
-    wglMakeCurrent(NULL, NULL);
+    wglMakeCurrent(nullptr, nullptr);
     wglDeleteContext(hRC);
     ReleaseDC(hwnd, hDC);
 }
@@ -154,16 +154,12 @@ int WINAPI WinMain(
     // currently running
     HINSTANCE programInstanceHandle,
     // deprecated
-    HINSTANCE previousProgramInstanceHandle,
+    HINSTANCE, //previousProgramInstanceHandle,
     // pointer to command line arguments as a string
-    PSTR commandLineString_Ptr,
+    PSTR, //commandLineString_Ptr,
     // legacy
-    int nCmdShow)
+    int) //nCmdShow)
 {
-    (void)previousProgramInstanceHandle;
-    (void)commandLineString_Ptr;
-    (void)nCmdShow;
-
     WNDCLASSEX windowClassEx;
     HWND windowHandle;
 
@@ -185,13 +181,13 @@ int WINAPI WinMain(
     windowClassEx.hInstance = programInstanceHandle;
     // set the icon, NULL specifies a standard icon,
     // using default application icon
-    windowClassEx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    windowClassEx.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
     // similarly use default cursor
-    windowClassEx.hCursor = LoadCursor(NULL, IDC_ARROW);
+    windowClassEx.hCursor = LoadCursor(nullptr, IDC_ARROW);
     windowClassEx.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    windowClassEx.lpszMenuName = NULL;
+    windowClassEx.lpszMenuName = nullptr;
     windowClassEx.lpszClassName = "MainWindow";
-    windowClassEx.hIconSm = LoadIcon(NULL, IDI_APPLICATION);;
+    windowClassEx.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);;
 
     if (!RegisterClassEx(&windowClassEx))
     {
@@ -201,16 +197,16 @@ int WINAPI WinMain(
     // create main window
     windowHandle = CreateWindowEx(0,
                           "MainWindow",
-                          "Iron Worlds 1",
+                          platformContext.programName.c_str(),
                           WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_MAXIMIZE,
                           CW_USEDEFAULT,
                           CW_USEDEFAULT,
                           CW_USEDEFAULT,
                           CW_USEDEFAULT,
-                          NULL,
-                          NULL,
+                          nullptr,
+                          nullptr,
                           programInstanceHandle,
-                          NULL);
+                          nullptr);
 
     // enable OpenGL for the window
     EnableOpenGL(windowHandle, &deviceContextHandle, &renderContextHandle);

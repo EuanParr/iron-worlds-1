@@ -14,6 +14,7 @@ namespace common_main
     public:
         input::BindingSet bindings;
         bool quit = false;
+        std::string programName = "Iron Worlds";
 
         virtual ~PlatformContext() {};
 

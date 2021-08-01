@@ -151,7 +151,7 @@ int main(int argc, char** argv)
     x11SetWindowAttributes.event_mask = x11EventMask;
 
     x11WindowID = XCreateWindow(x11Display_Ptr, RootWindow(x11Display_Ptr, x11VisualInfo_Ptr->screen), 0, 0, 300, 200, 0, x11VisualInfo_Ptr->depth, InputOutput, x11VisualInfo_Ptr->visual, CWBorderPixel | CWColormap | CWEventMask, &x11SetWindowAttributes);
-    XSetStandardProperties(x11Display_Ptr, x11WindowID, "Iron Worlds 1", "Iron Worlds 1", None, argv, argc, nullptr);
+    XSetStandardProperties(x11Display_Ptr, x11WindowID, platformContext.programName, platformContext.programName, None, argv, argc, nullptr);
 
     // bind rendering context to window
     glXMakeCurrent(x11Display_Ptr, x11WindowID, x11GlxContext);
@@ -162,7 +162,7 @@ int main(int argc, char** argv)
 
     glEnable(GL_DEPTH_TEST);
 
-    common_main::main(latformContext);
+    common_main::main(platformContext);
 
     return 0;
 }

@@ -27,13 +27,13 @@ namespace structure
     std::ostream& operator<<(std::ostream& output, const SPairPtr& p)
     {
         // for printing in dotted-pair form
-        output << "(" << p->data << " . " << p->next << ")";
+        output << "(" << p->data_ << " . " << p->next_ << ")";
         return output;
     }
 
     std::ostream& operator<<(std::ostream& output, const AtomPtr& a)
     {
-        output << a->name; // << "@" << a.get();
+        output << a->name_; // << "@" << a.get();
         return output;
     }
 

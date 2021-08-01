@@ -38,12 +38,12 @@ namespace structure
     class SPair : public SExpression
     {
     public:
-        SExpressionPtr data;
-        SExpressionPtr next;
+        SExpressionPtr data_;
+        SExpressionPtr next_;
 
         SPair() {};
         SPair(SExpressionPtr data, SExpressionPtr next):
-            data(data), next(next) {};
+            data_(data), next_(next) {};
 
         ~SPair() {};
 
@@ -53,10 +53,10 @@ namespace structure
     class Atom : public SExpression
     {
     public:
-        std::string name;
+        std::string name_;
 
         Atom() {};
-        Atom(std::string name): name(name) {};
+        Atom(std::string name): name_(name) {};
 
         bool isAtom() const {return true;};
         bool isList() const {return false;};

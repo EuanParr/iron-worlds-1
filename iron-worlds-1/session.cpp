@@ -168,7 +168,7 @@ namespace session
         structure::AtomPtr result = nullptr;
         for (auto atom : symbolTable)
         {
-            if (atom->name == keyName)
+            if (atom->name_ == keyName)
             {
                 result = atom;
             }
@@ -229,22 +229,22 @@ namespace session
 
                 // add a new list unit
                 structure::SPairPtr newUnitPtr = std::make_shared<structure::SPair>();
-                lastPtr->next = newUnitPtr;
+                lastPtr->next_ = newUnitPtr;
 
                 // move the pointer along
                 lastPtr = newUnitPtr;
 
                 // fill our new list unit and remove this contained S-Expression
-                lastPtr->data = parseSingleSExpression(tokens, depth);
+                lastPtr->data_ = parseSingleSExpression(tokens, depth);
             }
             //finally make the end of the list point to NIL
-            lastPtr->next = nilAtomPtr;
+            lastPtr->next_ = nilAtomPtr;
 
             // now we remove our matching )
             tokens.erase(tokens.begin());
 
             // this algorithm prepends a superfluous pair, so we remove it now
-            return rootPtr->next;
+            return rootPtr->next_;
         }
         else if (token == "'")
         {
@@ -329,7 +329,7 @@ namespace session
         }
         else
         {
-            return maybePair->data;
+            return maybePair->data_;
         }
     }
 
@@ -342,7 +342,7 @@ namespace session
         }
         else
         {
-            return maybePair->next;
+            return maybePair->next_;
         }
     }
 
@@ -446,8 +446,8 @@ namespace session
                 */
 
                 auto evaluatedArgs = evalList(cdr0(expression), environment);
-                auto newPair = std::make_shared<structure::SPair>(evaluatedArgs, globalEnvironmentPtr->next);
-                globalEnvironmentPtr->next = newPair;
+                auto newPair = std::make_shared<structure::SPair>(evaluatedArgs, globalEnvironmentPtr->next_);
+                globalEnvironmentPtr->next_ = newPair;
                 return car0(cdr0(evaluatedArgs));
             }
             else if (carExpression == errorAtomPtr)

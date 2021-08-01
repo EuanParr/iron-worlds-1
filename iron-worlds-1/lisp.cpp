@@ -1,5 +1,7 @@
 #include "lisp.h"
 
+#include <limits>
+
 namespace lisp
 {
     std::ostream& operator<<(std::ostream& output, const Symbol& sym)
@@ -15,6 +17,22 @@ namespace lisp
         case ' ':
         case '\t':
         case '\n':
+            return true;
+            break;
+        default:
+            return false;
+            break;
+        }
+    }
+
+    bool isSpecialChar(SymbolChar c)
+    {
+        switch (c)
+        {
+        case '(':
+        case ')':
+        case '.':
+        case '\'':
             return true;
             break;
         default:
@@ -49,6 +67,8 @@ namespace lisp
 
     void ExecutionStack::bind(Symbol* key, LispHandle value)
     {
+        // TODO: could a symbol be bound multiple times in a stack frame? if it
+        // can we need to deal with it
         assert(topFrame_Ptr);
         topFrame_Ptr->registerBinding(key);
         key->bindingStack.push_back(value);
@@ -72,7 +92,7 @@ namespace lisp
         exStack.push_back();
         atomNil = stringToSymbol("nil").basicSymbol;
         LispHandle temp;
-        temp.flag = LispHandle::BasicSymbolT;
+        temp.tag = LispHandle::BasicSymbolT;
         temp.basicSymbol = atomNil;
         exStack.bind(atomNil, temp);
     }
@@ -84,7 +104,7 @@ namespace lisp
 
     void VirtualMachine::print(LispHandle expr, std::ostream& printStream)
     {
-        switch (expr.flag)
+        switch (expr.tag)
         {
             case LispHandle::ListT:
             {
@@ -97,7 +117,7 @@ namespace lisp
                 print(carHandle, printStream);
                 cdrHandle = currentListPtr->second;
                 currentHandle = cdrHandle;
-                while (currentHandle.flag == LispHandle::ListT)
+                while (currentHandle.tag == LispHandle::ListT)
                 {
                     currentListPtr = currentHandle.listNode;
                     carHandle = currentListPtr->first;
@@ -108,7 +128,7 @@ namespace lisp
                     currentHandle = cdrHandle;
                 }
 
-                if (currentHandle.flag != currentHandle.BasicSymbolT || currentHandle.basicSymbol != atomNil)
+                if (currentHandle.tag != currentHandle.BasicSymbolT || currentHandle.basicSymbol != atomNil)
                 {
                     printStream << " . ";
                     print(currentHandle, printStream);
@@ -124,46 +144,90 @@ namespace lisp
 
                 break;
             }
+
+            default:
+            {
+                assert(false);
+            }
         }
     }
 
     LispHandle VirtualMachine::read(std::istream& readStream)
     {
-        SymbolChar thisChar;
-        while (readStream.get(thisChar))
+        /*SymbolChar thisChar;
+        bool tokenFound = false;
+        while (!tokenFound)
         {
-            if (isWhiteSpace(thisChar))
+            if (!readStream.get(thisChar))
             {
-                continue;
-            }
-            else if (thisChar == '(')
-            {
-                return readList(readStream);
+                ELOG("Unexpected end of stream");
+                return LispHandle{0, nullptr};
             }
             else
             {
-                return readSymbol(thisChar, readStream);
+                if isWhiteSpace(thisChar)
+                {
+                    // skip white space
+                    continue;
+                }
+                else if (thisChar == ';')
+                {
+                    // skip comment line
+                    bool streamFail = true;
+                    while (!readStream.get(thisChar))
+                    {
+                        if (thisChar == '\n')
+                        {
+                            streamFail = false;
+                            break;
+                        }
+                    }
+                    if (streamFail)
+                    {
+                        ELOG("Unexpected end of stream");
+                        return LispHandle{0, nullptr};
+                    }
+                }
             }
-        }
+        }*/
+
+
+
     }
 
     LispHandle VirtualMachine::readList(std::istream& readStream)
     {
-        SymbolChar thisChar;
-        while (readStream.get(thisChar))
+        // called after the '(' of a list, consumes the rest of the list
+        SymbolChar currentChar;
+        LispHandle result;
+        LispHandle listTail;
+        while (readStream.get(currentChar))
         {
+            if (currentChar == ')')
+            {
+                listTail.tag = listTail.BasicSymbolT;
+                listTail.basicSymbol = atomNil;
+                return result;
+            }
+            else if (currentChar == '.')
+            {
 
+            }
+            else
+            {
+
+            }
         }
     }
 
-    LispHandle VirtualMachine::readSymbol(SymbolChar startChar, std::istream& readStream)
+    LispHandle VirtualMachine::readSymbol(SymbolChar& currentChar, std::istream& readStream)
     {
+        // called after the first char of a symbol
         SymbolString fullName;
-        SymbolChar thisChar = startChar;
-        while (!isWhiteSpace(thisChar) && thisChar != ')')
+        while (!isWhiteSpace(currentChar) && currentChar != ')')
         {
-            fullName += thisChar;
-            if (!readStream.get(thisChar))
+            fullName += currentChar;
+            if (!readStream.get(currentChar))
             {
                 ELOG("unexpected EOF while parsing a symbol");
             }
@@ -171,11 +235,68 @@ namespace lisp
         return stringToSymbol(fullName);
     }
 
+    SymbolString VirtualMachine::readToken(std::istream& readStream)
+    {
+        SymbolChar currentChar;
+
+        while (readStream)
+        {
+            // clear leading white space
+            readStream >> std::ws;
+
+            currentChar = readStream.peek();
+            if (!readStream)
+            {
+                ELOG("unexpected stream failure");
+                return "";
+            }
+            else if (currentChar == ';')
+            {
+                // skip comment line
+                readStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                continue;
+            }
+            else if (isSpecialChar(currentChar))
+            {
+                // each of these characters are a token no matter the spacing
+
+                // pop current char
+                readStream.ignore();
+                // make string of char
+                return SymbolString(1, currentChar);
+            }
+            else
+            {
+                // normal symbol tokens
+                SymbolString resultString(1, currentChar);
+                readStream.ignore();
+                while (readStream)
+                {
+                    currentChar = readStream.peek();
+
+                    if (isWhiteSpace(currentChar) || isSpecialChar(currentChar))
+                    {
+                        // token ended
+                        return resultString;
+                    }
+                    else
+                    {
+                        // go to next char
+                        resultString += currentChar;
+                        readStream.ignore();
+                    }
+                }
+            }
+        }
+        ELOG("unexpected stream failure");
+        return "";
+    }
+
     LispHandle VirtualMachine::stringToSymbol(SymbolString name)
     {
         Symbol* temp = &symbolTable.emplace(name, Symbol(name)).first->second;
         LispHandle result;
-        result.flag = LispHandle::BasicSymbolT;
+        result.tag = LispHandle::BasicSymbolT;
         result.basicSymbol = temp;
         return result;
     }

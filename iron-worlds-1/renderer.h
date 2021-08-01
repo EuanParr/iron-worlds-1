@@ -12,6 +12,8 @@ namespace renderer
     class Shape
     {
     public:
+        virtual ~Shape () {};
+
         virtual void draw() = 0;
     };
 
@@ -53,7 +55,7 @@ namespace renderer
                             float y = coords[1] - 0.5f;
                             float z = coords[2] - 0.5f;
                             glColor3f(2*x, 2*y, 2*z);
-                            glVertex3f(1.4*x, 1.4*y, 1.4*z);
+                            glVertex3f(1.4f*x, 1.4f*y, 1.4f*z);
                         }
                     }
                     glEnd();
@@ -85,7 +87,7 @@ namespace renderer
                     y = coords[face][point][1] - 0.5f;
                     z = coords[face][point][2] - 0.5f;
                     glColor3f(0, 2*x, 1);
-                    glVertex3f(1.4*x, 1.4*y, 1.4*z);
+                    glVertex3f(1.4f*x, 1.4f*y, 1.4f*z);
                 }
             }
             glEnd();
@@ -97,27 +99,27 @@ namespace renderer
     public:
         void draw()
         {
-            double step = pi / 5;
-            for (float i = 0; i < 2 * pi; i+= step)
+            float step = (float)pi / 5;
+            for (float i = 0; i < 2 * (float)pi; i+= step)
             {
                 glBegin(GL_TRIANGLE_STRIP);
                 float x, y, z;
 
-                for (float j = -pi; j < pi; j+= step)
+                for (float j = -(float)pi; j < (float)pi; j+= step)
                 {
 
                     float sinJ = sin(j);
-                    x = cos(i) * sinJ;
-                    y = sin(i) * sinJ;
-                    z = cos(j);
+                    x = (float)cos(i) * sinJ;
+                    y = (float)sin(i) * sinJ;
+                    z = (float)cos(j);
 
                     glColor3f(x/2 + 0.5f, y/2 + 0.5f, z/2 + 0.5f);
                     glVertex3f(x, y, z);
 
                     i += step;
 
-                    x = cos(i) * sinJ;
-                    y = sin(i) * sinJ;
+                    x = float(cos(i)) * sinJ;
+                    y = float(sin(i)) * sinJ;
                     //z = cos(j);
 
                     glColor3f(x/2 + 0.5f, y/2 + 0.5f, z/2 + 0.5f);

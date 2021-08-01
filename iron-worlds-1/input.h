@@ -34,7 +34,7 @@ namespace input
     public:
         ButtonContainer(ButtonAction* newAction) : isDown(false), action(newAction) {};
         ButtonContainer() : isDown(false), action(nullptr) {};
-        ~ButtonContainer() {if (action) delete action;};
+        ~ButtonContainer() {delete action;};
 
         void setAction(ButtonAction* newAction) {if (action) delete action; action = newAction;};
         void updateState(bool newState) {isDown = newState; if (action) action->trigger(newState);}
