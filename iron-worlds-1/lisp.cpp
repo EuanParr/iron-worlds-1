@@ -82,15 +82,15 @@ namespace lisp
         topFrame_Ptr = temp;
     }
 
-    void ExecutionStack::push_back()
+    void ExecutionStack::push_back(std::string contextString)
     {
-        topFrame_Ptr = new ExecutionStackFrame(topFrame_Ptr);
+        topFrame_Ptr = new ExecutionStackFrame(topFrame_Ptr, contextString);
     }
 
     VirtualMachine::VirtualMachine()
     {
-        exStack.push_back();
-        atomNil = stringToSymbol("nil").basicSymbol;
+        exStack.push_back("global");
+        atomNil = stringToSymbol("nil");
         LispHandle temp;
         temp.tag = LispHandle::BasicSymbolT;
         temp.basicSymbol = atomNil;
@@ -140,7 +140,14 @@ namespace lisp
 
             case LispHandle::BasicSymbolT:
             {
-                printStream << *expr.basicSymbol;
+                if (expr.basicSymbol)
+                {
+                    printStream << *expr.basicSymbol;
+                }
+                else
+                {
+                    printStream << "<nullptr>";
+                }
 
                 break;
             }
@@ -154,73 +161,80 @@ namespace lisp
 
     LispHandle VirtualMachine::read(std::istream& readStream)
     {
-        /*SymbolChar thisChar;
-        bool tokenFound = false;
-        while (!tokenFound)
-        {
-            if (!readStream.get(thisChar))
-            {
-                ELOG("Unexpected end of stream");
-                return LispHandle{0, nullptr};
-            }
-            else
-            {
-                if isWhiteSpace(thisChar)
-                {
-                    // skip white space
-                    continue;
-                }
-                else if (thisChar == ';')
-                {
-                    // skip comment line
-                    bool streamFail = true;
-                    while (!readStream.get(thisChar))
-                    {
-                        if (thisChar == '\n')
-                        {
-                            streamFail = false;
-                            break;
-                        }
-                    }
-                    if (streamFail)
-                    {
-                        ELOG("Unexpected end of stream");
-                        return LispHandle{0, nullptr};
-                    }
-                }
-            }
-        }*/
-
-
-
+        return read(readStream, readToken(readStream));
     }
 
-    LispHandle VirtualMachine::readList(std::istream& readStream)
+    LispHandle VirtualMachine::read(std::istream& readStream, SymbolString thisToken)
     {
-        // called after the '(' of a list, consumes the rest of the list
-        SymbolChar currentChar;
-        LispHandle result;
-        LispHandle listTail;
-        while (readStream.get(currentChar))
+
+
+        if (isSpecialChar(thisToken[0]))
         {
-            if (currentChar == ')')
+            switch (thisToken[0])
             {
-                listTail.tag = listTail.BasicSymbolT;
-                listTail.basicSymbol = atomNil;
-                return result;
-            }
-            else if (currentChar == '.')
-            {
+            case '(':
+                return readList(readStream);
+            case ')':
+                ELOG("Unexpected ')'");
+                assert(false);
+            case '.':
 
-            }
-            else
-            {
+            case '\'':
 
+            default:
+                assert(false);
             }
         }
+        else
+        {
+            return stringToSymbol(thisToken);
+        }
+
     }
 
-    LispHandle VirtualMachine::readSymbol(SymbolChar& currentChar, std::istream& readStream)
+    ListNode* VirtualMachine::readList(std::istream& readStream)
+    {
+        // called after the '(' of a list, consumes the rest of the list
+
+        // points to the root cell of the list,
+        // exists to avoid special case of list start,
+        // discarded at function end
+        LispHandle resultHandle;
+        // a pointer to the last cell
+        LispHandle* listTail_Ptr = &resultHandle;
+
+        SymbolString currentToken = readToken(readStream);
+        SymbolChar& currentChar = currentToken[0];
+
+        while (currentChar != ')')
+        {
+            switch (currentChar)
+            {
+            case '.':
+                assert(false); // TODO
+                break;
+            default:
+                // read in list member, passing in first token
+                LispHandle thisItem = read(readStream, currentToken);
+                // construct a cell
+                ListNode* newCons = listMemory.construct();
+                // point the cell's cdr to the new member
+                newCons->first = thisItem;
+                // point the list tail's next handle to the new cell
+                *listTail_Ptr = LispHandle(newCons);
+                // update the pointer to the tail
+                listTail_Ptr = &(newCons->second);
+            }
+            currentToken = readToken(readStream);
+        }
+
+        // list ended, point last cdr to nil
+        *listTail_Ptr = LispHandle(atomNil);
+
+        return resultHandle.listNode;
+    }
+
+    Symbol* VirtualMachine::readSymbol(SymbolChar& currentChar, std::istream& readStream)
     {
         // called after the first char of a symbol
         SymbolString fullName;
@@ -278,6 +292,7 @@ namespace lisp
                     {
                         // token ended
                         return resultString;
+                        // do not consume the char after the symbol
                     }
                     else
                     {
@@ -292,12 +307,12 @@ namespace lisp
         return "";
     }
 
-    LispHandle VirtualMachine::stringToSymbol(SymbolString name)
+    Symbol* VirtualMachine::stringToSymbol(SymbolString name)
     {
         Symbol* temp = &symbolTable.emplace(name, Symbol(name)).first->second;
-        LispHandle result;
+        /*LispHandle result;
         result.tag = LispHandle::BasicSymbolT;
-        result.basicSymbol = temp;
-        return result;
+        result.basicSymbol = temp;*/
+        return temp;
     }
 }

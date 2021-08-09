@@ -20,6 +20,13 @@ namespace lisp
     {
         // tagged union
 
+        union
+        {
+            // a pointer to one of the Lisp entity types
+            ListNode* listNode;
+            Symbol* basicSymbol;
+        };
+
         enum : char
         {
             // specifies a Lisp entity type
@@ -28,13 +35,9 @@ namespace lisp
             BasicSymbolT = 2,
         } tag;
 
-        union
-        {
-            // a pointer to one of the Lisp entity types
-            ListNode* listNode;
-            Symbol* basicSymbol;
-        };
-
+        LispHandle() : listNode(nullptr), tag(NullT) {}
+        LispHandle(ListNode* node) : listNode(node), tag(ListT) {}
+        LispHandle(Symbol* symbol) : basicSymbol(symbol), tag(BasicSymbolT) {}
     };
 
     struct ListNode
@@ -76,13 +79,11 @@ namespace lisp
             delete[] nodesArray_Ptr;
         }
 
-        ListNode* construct(LispHandle first, LispHandle second)
+        ListNode* construct()
         {
             if (nextFree < arraySize)
             {
                 ListNode* result_Ptr = nodesArray_Ptr + nextFree;
-                result_Ptr->first = first;
-                result_Ptr->second = second;
                 nextFree++;
                 return result_Ptr;
             }
@@ -92,6 +93,14 @@ namespace lisp
                 return nullptr;
             }
         }
+
+        ListNode* construct(LispHandle first, LispHandle second)
+        {
+            ListNode* result_Ptr = construct();
+            result_Ptr->first = first;
+            result_Ptr->second = second;
+            return result_Ptr;
+        }
     };
 
     typedef ListNode* HandleListNode;
@@ -100,8 +109,11 @@ namespace lisp
     {
         ExecutionStackFrame* nextFrame_PtrWeak = nullptr;
         std::vector<Symbol*> boundSymbols;
+        std::string contextString_;
     public:
-        ExecutionStackFrame(ExecutionStackFrame* next) : nextFrame_PtrWeak(next) {}
+        ExecutionStackFrame(ExecutionStackFrame* next, std::string contextString)
+            : nextFrame_PtrWeak(next),
+            contextString_(contextString) {}
         ~ExecutionStackFrame();
 
         ExecutionStackFrame* getNext() {return nextFrame_PtrWeak;}
@@ -117,7 +129,7 @@ namespace lisp
 
         void bind(Symbol* key, LispHandle value);
         void pop_back();
-        void push_back();
+        void push_back(std::string contextString);
     };
 
     class VirtualMachine
@@ -125,18 +137,24 @@ namespace lisp
         ExecutionStack exStack;
         LispListMemory listMemory;
         std::unordered_map<SymbolString, Symbol> symbolTable;
-        Symbol* atomNil;
+        Symbol* atomNil, * atomQuote;
 
         public:
         VirtualMachine();
         ~VirtualMachine();
 
         void print(LispHandle expr, std::ostream& printStream);
+        void printLn(LispHandle expr, std::ostream& printStream)
+        {
+            print(expr, printStream);
+            printStream << std::endl;
+        }
         LispHandle read(std::istream& readStream);
-        LispHandle readList(std::istream& readStream);
-        LispHandle readSymbol(SymbolChar& currentChar, std::istream& readStream);
+        LispHandle read(std::istream& readStream, SymbolString thisToken);
+        ListNode* readList(std::istream& readStream);
+        Symbol* readSymbol(SymbolChar& currentChar, std::istream& readStream);
         SymbolString readToken(std::istream& readStream);
-        LispHandle stringToSymbol(SymbolString name);
+        Symbol* stringToSymbol(SymbolString name);
     };
 }
 

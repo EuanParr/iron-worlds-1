@@ -26,10 +26,9 @@ namespace common_main
         lisp::VirtualMachine lispVM;
         //lispVM.print(lispVM.read(std::cin), std::cout);
         lisp::SymbolString s;
-        while (s != "quit")
+        while (true || s != "quit")
         {
-            s = lispVM.readToken(std::cin);
-            LOG(s);
+            lispVM.printLn(lispVM.read(std::cin), std::cout);
         }
     }
 
