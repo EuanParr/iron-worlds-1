@@ -192,6 +192,11 @@ namespace lisp
 
     }
 
+    LispHandle VirtualMachine::evaluate(LispHandle expr)
+    {
+
+    }
+
     ListNode* VirtualMachine::readList(std::istream& readStream)
     {
         // called after the '(' of a list, consumes the rest of the list

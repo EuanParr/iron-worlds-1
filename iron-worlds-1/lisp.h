@@ -151,6 +151,7 @@ namespace lisp
         }
         LispHandle read(std::istream& readStream);
         LispHandle read(std::istream& readStream, SymbolString thisToken);
+        LispHandle evaluate(LispHandle expr);
         ListNode* readList(std::istream& readStream);
         Symbol* readSymbol(SymbolChar& currentChar, std::istream& readStream);
         SymbolString readToken(std::istream& readStream);

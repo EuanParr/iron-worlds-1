@@ -26,6 +26,7 @@ namespace common_main
         lisp::VirtualMachine lispVM;
         while (true)
         {
+            std::cout << ">>> ";
             lispVM.printLn(lispVM.read(std::cin), std::cout);
         }
     }
