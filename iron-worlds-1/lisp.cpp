@@ -56,6 +56,11 @@ namespace lisp
         boundSymbols.push_back(key);
     }
 
+    ExecutionStack::ExecutionStack()
+    {
+        push_back("global");
+    }
+
     ExecutionStack::~ExecutionStack()
     {
         // unwind the stack
@@ -87,19 +92,12 @@ namespace lisp
         topFrame_Ptr = new ExecutionStackFrame(topFrame_Ptr, contextString);
     }
 
-    VirtualMachine::VirtualMachine()
+    Builtins::Builtins(VirtualMachine& parentVM)
     {
-        exStack.push_back("global");
-        atomNil = stringToSymbol("nil");
-        LispHandle temp;
-        temp.tag = LispHandle::BasicSymbolT;
-        temp.basicSymbol = atomNil;
-        exStack.bind(atomNil, temp);
-    }
-
-    VirtualMachine::~VirtualMachine()
-    {
-
+        for (std::pair<Symbol*, SymbolString>& bindPair : bindings)
+        {
+            bindPair.first = parentVM.stringToSymbol(bindPair.second);
+        }
     }
 
     void VirtualMachine::print(LispHandle expr, std::ostream& printStream)
@@ -128,7 +126,7 @@ namespace lisp
                     currentHandle = cdrHandle;
                 }
 
-                if (currentHandle.tag != currentHandle.BasicSymbolT || currentHandle.basicSymbol != atomNil)
+                if (currentHandle.tag != currentHandle.BasicSymbolT || currentHandle.basicSymbol != builtins.nil)
                 {
                     printStream << " . ";
                     print(currentHandle, printStream);
@@ -194,7 +192,7 @@ namespace lisp
 
     LispHandle VirtualMachine::evaluate(LispHandle expr)
     {
-
+        return expr;
     }
 
     ListNode* VirtualMachine::readList(std::istream& readStream)
@@ -234,7 +232,7 @@ namespace lisp
         }
 
         // list ended, point last cdr to nil
-        *listTail_Ptr = LispHandle(atomNil);
+        *listTail_Ptr = LispHandle(builtins.nil);
 
         return resultHandle.listNode;
     }
@@ -314,10 +312,7 @@ namespace lisp
 
     Symbol* VirtualMachine::stringToSymbol(SymbolString name)
     {
-        Symbol* temp = &symbolTable.emplace(name, Symbol(name)).first->second;
-        /*LispHandle result;
-        result.tag = LispHandle::BasicSymbolT;
-        result.basicSymbol = temp;*/
-        return temp;
+        // creates symbol if does not exist, returns pointer to it either way
+        return &symbolTable.emplace(name, Symbol(name)).first->second;
     }
 }

@@ -125,6 +125,7 @@ namespace lisp
         ExecutionStackFrame* topFrame_Ptr = nullptr;
 
     public:
+        ExecutionStack();
         ~ExecutionStack();
 
         void bind(Symbol* key, LispHandle value);
@@ -132,16 +133,47 @@ namespace lisp
         void push_back(std::string contextString);
     };
 
+    class VirtualMachine;
+
+    class Builtins
+    {
+    public:
+        // TODO: references would be better, but that would complicate
+        // construction. For now handle this in the VirtualMachine constructor.
+        // Also pointers can be easily used where handles are expected.
+        Symbol* nil;
+        Symbol* quote;
+        Symbol* def;
+        Symbol* let;
+        Symbol* lambda;
+
+        std::vector<std::pair<Symbol*, SymbolString>> bindings =
+        {
+            {nil, "nil"},
+            {quote, "quote"},
+            {def, "def"},
+            {let, "let"},
+            {lambda, "lambda"},
+        };
+
+        Builtins(VirtualMachine& parentVM);
+    };
+
     class VirtualMachine
     {
         ExecutionStack exStack;
         LispListMemory listMemory;
         std::unordered_map<SymbolString, Symbol> symbolTable;
-        Symbol* atomNil, * atomQuote;
+        Builtins builtins;
 
         public:
-        VirtualMachine();
-        ~VirtualMachine();
+        VirtualMachine() : builtins(*this) {};
+        /*~VirtualMachine();
+
+        // forbid copying
+        // TODO: is there a better way to rule-of-3 this class?
+        VirtualMachine(const VirtualMachine&) = delete;
+        VirtualMachine& operator=(const VirtualMachine&) = delete;*/
 
         void print(LispHandle expr, std::ostream& printStream);
         void printLn(LispHandle expr, std::ostream& printStream)

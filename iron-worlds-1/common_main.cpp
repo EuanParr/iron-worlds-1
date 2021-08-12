@@ -27,7 +27,7 @@ namespace common_main
         while (true)
         {
             std::cout << ">>> ";
-            lispVM.printLn(lispVM.read(std::cin), std::cout);
+            lispVM.printLn(lispVM.evaluate(lispVM.read(std::cin)), std::cout);
         }
     }
 
