@@ -142,12 +142,12 @@ namespace lisp
         // construction. For now handle this in the VirtualMachine constructor.
         // Also pointers can be easily used where handles are expected.
         Symbol* nil;
-        Symbol* quote;
+        Symbol* quote = nullptr;
         Symbol* def;
         Symbol* let;
         Symbol* lambda;
 
-        std::vector<std::pair<Symbol*, SymbolString>> bindings =
+        std::vector<std::pair<Symbol*&, SymbolString>> bindings =
         {
             {nil, "nil"},
             {quote, "quote"},

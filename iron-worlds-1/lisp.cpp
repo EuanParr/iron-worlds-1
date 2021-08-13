@@ -94,10 +94,11 @@ namespace lisp
 
     Builtins::Builtins(VirtualMachine& parentVM)
     {
-        for (std::pair<Symbol*, SymbolString>& bindPair : bindings)
+        for (std::pair<Symbol*&, SymbolString> bindPair : bindings)
         {
             bindPair.first = parentVM.stringToSymbol(bindPair.second);
         }
+        nil->bindingStack.push_back(nil);
     }
 
     void VirtualMachine::print(LispHandle expr, std::ostream& printStream)
@@ -178,7 +179,8 @@ namespace lisp
             case '.':
 
             case '\'':
-
+                return listMemory.construct(builtins.quote, listMemory.construct(read(readStream), builtins.nil));
+                LOG("HI");
             default:
                 assert(false);
             }
@@ -192,7 +194,69 @@ namespace lisp
 
     LispHandle VirtualMachine::evaluate(LispHandle expr)
     {
-        return expr;
+        switch (expr.tag)
+        {
+        case (expr.NullT):
+            ELOG("Null-type Lisp handle");
+            assert(false);
+            break;
+
+        case (expr.ListT):
+            {
+                LispHandle first = evaluate(expr.listNode->first);
+
+                switch(first.tag)
+                {
+                case (first.NullT):
+                    ELOG("Null-type Lisp handle");
+                    assert(false);
+                    break;
+
+                case (first.ListT):
+                    ELOG("function evaluated to list");
+                    assert(false);
+                    break;
+
+                case (first.BasicSymbolT):
+                    {
+                        if (false)
+                        {
+
+                        }
+                        else
+                        {
+                            return expr;
+                        }
+                    }
+
+                    break;
+
+                default:
+                    ELOG("unaccounted for handle type");
+                    assert(false);
+                    break;
+                }
+            }
+
+            break;
+
+        case (expr.BasicSymbolT):
+            if (expr.basicSymbol->bindingStack.empty())
+            {
+                ELOG("Unbound symbol");
+                assert(false);
+            }
+            else
+            {
+                return expr.basicSymbol->bindingStack.back();
+            }
+            break;
+
+        default:
+            ELOG("unaccounted for handle type");
+            assert(false);
+            break;
+        }
     }
 
     ListNode* VirtualMachine::readList(std::istream& readStream)
