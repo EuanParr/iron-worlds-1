@@ -6,7 +6,6 @@
 #include "common_main.h"
 #include "platform.h"
 #include "scene.h"
-#include "session.h"
 
 #include <cmath>
 #include <iostream>

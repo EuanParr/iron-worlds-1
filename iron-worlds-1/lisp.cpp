@@ -41,6 +41,26 @@ namespace lisp
         }
     }
 
+    LispHandle quote_SF(VirtualMachine& vm, LispHandle args)
+    {
+        return args.listNode->first;
+    }
+
+    LispHandle def_SF(VirtualMachine& vm, LispHandle args)
+    {
+
+    }
+
+    LispHandle let_SF(VirtualMachine& vm, LispHandle args)
+    {
+
+    }
+
+    LispHandle lambda_SF(VirtualMachine& vm, LispHandle args)
+    {
+
+    }
+
     ExecutionStackFrame::~ExecutionStackFrame()
     {
         // remove this frame's bindings from each symbol
@@ -99,6 +119,11 @@ namespace lisp
             bindPair.first = parentVM.stringToSymbol(bindPair.second);
         }
         nil->bindingStack.push_back(nil);
+    }
+
+    VirtualMachine::VirtualMachine() : builtins(*this)
+    {
+        exStack.bind(builtins.quote, LispHandle(quote_SF, 0));
     }
 
     void VirtualMachine::print(LispHandle expr, std::ostream& printStream)
@@ -231,6 +256,12 @@ namespace lisp
 
                     break;
 
+                case (first.SpecialFormT):
+                    {
+                        return first.specialForm(*this, expr.listNode->second);
+                    }
+                    break;
+
                 default:
                     ELOG("unaccounted for handle type");
                     assert(false);
@@ -243,7 +274,7 @@ namespace lisp
         case (expr.BasicSymbolT):
             if (expr.basicSymbol->bindingStack.empty())
             {
-                ELOG("Unbound symbol");
+                ELOG("Unbound symbol: " << expr.basicSymbol->name);
                 assert(false);
             }
             else

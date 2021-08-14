@@ -15,6 +15,10 @@ namespace lisp
 
     struct ListNode;
     struct Symbol;
+    struct LispHandle;
+    class VirtualMachine;
+
+    typedef LispHandle (*NativeFunctionPtr) (VirtualMachine&, LispHandle);
 
     struct LispHandle
     {
@@ -25,6 +29,8 @@ namespace lisp
             // a pointer to one of the Lisp entity types
             ListNode* listNode;
             Symbol* basicSymbol;
+            NativeFunctionPtr nativeFunction;
+            NativeFunctionPtr specialForm;
         };
 
         enum : char
@@ -33,11 +39,15 @@ namespace lisp
             NullT = 0,
             ListT = 1,
             BasicSymbolT = 2,
+            NativeFunctionT = 3,
+            SpecialFormT = 4
         } tag;
 
         LispHandle() : listNode(nullptr), tag(NullT) {}
         LispHandle(ListNode* node) : listNode(node), tag(ListT) {}
         LispHandle(Symbol* symbol) : basicSymbol(symbol), tag(BasicSymbolT) {}
+        LispHandle(NativeFunctionPtr func) : nativeFunction(func), tag(NativeFunctionT) {}
+        LispHandle(NativeFunctionPtr form, int) : specialForm(form), tag(SpecialFormT) {}
     };
 
     struct ListNode
@@ -142,7 +152,7 @@ namespace lisp
         // construction. For now handle this in the VirtualMachine constructor.
         // Also pointers can be easily used where handles are expected.
         Symbol* nil;
-        Symbol* quote = nullptr;
+        Symbol* quote;
         Symbol* def;
         Symbol* let;
         Symbol* lambda;
@@ -167,7 +177,7 @@ namespace lisp
         Builtins builtins;
 
         public:
-        VirtualMachine() : builtins(*this) {};
+        VirtualMachine();
         /*~VirtualMachine();
 
         // forbid copying
