@@ -182,6 +182,7 @@
 		<Unit filename="session.h" />
 		<Unit filename="structure.cpp" />
 		<Unit filename="structure.h" />
+		<Unit filename="test.lsp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

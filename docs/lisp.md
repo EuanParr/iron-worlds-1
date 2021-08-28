@@ -50,6 +50,31 @@ What about something closer to intelligent assertions? Something like (defun f (
 Essential to programming is the interaction of assumptions and guarantees, which allows a programmer to narrow their focus. Without it, trying to reason about a program of any size is intractable. What we do instead is when writing a part of a program, we make assumptions about what we use in it and try to make something we can make a desired guarantee about, so that we can then make corresponding assumptions when using it in other program parts. Ideally this would allow us to know for sure that the program as a whole is as required. But programmers are fallible and we often oversimplify our assumptions, leading to the failure of guarantees. Hence we have type safety systems that attempt to prevent programmers from assuming what cannot be guaranteed. These same systems allow program transformers e.g. compilers/interpreters to make useful assumptions about code which allow them to do their work more effectively.
 
 # Parsing
-This could be done by using
 
 # Interface and builtins
+We need a way to 
+
+# First-Class Functions
+The language should emphasise functional programming, so we must support using functions as first-class objects. This raises the issue of non-local variables. Consider:
+
+01> (define sumc
+      (lambda (x)
+        (lambda (y) (+ x y))))
+
+This curried-sum function should be usable thusly:
+
+02> (define add5 (sumc 5))
+--> ?
+03> (add5 4)
+--> 9
+
+Now how might the evaluation proceed?
+(define add5 (sumc 5))
+(define add5 ((lambda (x) (lambda (y) (+ x y))) 5))
+(define add5 (lambda (y) (+ 5 y)))
+
+(add5 4)
+((lambda (y) (+ 5 y)) 4)
+(+ 5 4)
+9
+9

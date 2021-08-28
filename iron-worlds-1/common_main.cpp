@@ -23,11 +23,26 @@ namespace common_main
 
     void lispThreadFunc()
     {
-        lisp::VirtualMachine lispVM;
-        while (true)
+        try
         {
-            std::cout << ">>> ";
-            lispVM.printLn(lispVM.evaluate(lispVM.read(std::cin)), std::cout);
+            lisp::VirtualMachine lispVM;
+            lisp::LispHandle result;
+            lispVM.readFile("programs.lsp");
+            while (true)
+            {
+                std::cout << ">>> ";
+                result = lispVM.evaluate(lispVM.read(std::cin));
+                std::cout << "--> ";
+                lispVM.printLn(result, std::cout);
+            }
+        }
+        catch (std::exception const &exc)
+        {
+            std::cerr << "Exception caught: " << exc.what() << "\n";
+        }
+        catch (...)
+        {
+            std::cerr << "Unknown exception caught\n";
         }
     }
 

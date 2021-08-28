@@ -41,14 +41,46 @@ namespace lisp
         }
     }
 
-    LispHandle quote_SF(VirtualMachine& vm, LispHandle args)
+    LispHandle listGet(LispHandle expr, unsigned int index)
     {
-        return args.listNode->first;
+        for (unsigned int i = 0; i < index; i++)
+        {
+            if (expr.tag == expr.ListT)
+            {
+                expr = expr.listNode->second;
+            }
+            else
+            {
+                throw std::range_error("Lisp list ended prematurely");
+            }
+        }
+        if (expr.tag == expr.ListT)
+        {
+            return expr.listNode->first;
+        }
+        else
+        {
+            throw std::range_error("Lisp list ended prematurely");
+        }
+    }
+
+    LispHandle quote_SF(VirtualMachine&, LispHandle args)
+    {
+        return listGet(args, 0);
     }
 
     LispHandle def_SF(VirtualMachine& vm, LispHandle args)
     {
-
+        LispHandle key = listGet(args, 0);
+        if (key.tag == key.BasicSymbolT)
+        {
+            vm.bind(key.basicSymbol, vm.evaluate(listGet(args, 1)));
+            return key.basicSymbol->bindingStack.back();
+        }
+        else
+        {
+            throw std::domain_error("attempt to bind a non-symbol");
+        }
     }
 
     LispHandle let_SF(VirtualMachine& vm, LispHandle args)
@@ -58,7 +90,110 @@ namespace lisp
 
     LispHandle lambda_SF(VirtualMachine& vm, LispHandle args)
     {
+        Lambda* result = vm.memory.lambdas.construct();
+        LispHandle parameters = listGet(args, 0);
+        while (true)
+        {
+            if (!vm.isAtom(parameters))
+            {
+                LispHandle param = parameters.car();
+                if(param.tag == param.BasicSymbolT)
+                {
+                    result->parameters.push_back(param.basicSymbol);
+                }
+                else
+                {
+                    throw std::domain_error("non-symbol in lambda parameter list");
+                }
+                parameters = parameters.cdr();
+            }
+            else
+            {
+                // parameter list ended
+                break;
+            }
+        }
 
+        if (vm.isAtom(args.cdr().cdr()))
+        {
+            // body is 1 list
+            result->body = listGet(args, 1);
+        }
+        else
+        {
+            // body is multiple lists, insert implicit progn
+            result->body = vm.memory.lists.construct(vm.builtins.progn, args.cdr());
+        }
+
+        return result;
+    }
+
+    LispHandle progn_SF(VirtualMachine& vm, LispHandle args)
+    {
+        LispHandle result;
+        while (args.tag == args.ListT)
+        {
+            result = vm.evaluate(args.car());
+            args = args.cdr();
+        }
+        return result;
+    }
+
+    LispHandle cond_SF(VirtualMachine& vm, LispHandle args)
+    {
+        while (true)
+        {
+            if (vm.isList(args))
+            {
+                LispHandle clause = args.car();
+                if (!vm.isNil(vm.evaluate(listGet(clause, 0))))
+                {
+                    return vm.evaluate(listGet(clause, 1));
+                }
+            }
+            else
+            {
+                // reached end of condition list, return the terminating
+                // symbol, which is nil unless otherwise specified by user
+                return args;
+            }
+            args = args.cdr();
+        }
+    }
+
+    LispHandle closure_SF(VirtualMachine& vm, LispHandle args)
+    {
+
+    }
+
+    LispHandle LispHandle::car()
+    {
+        if (tag == ListT)
+        {
+            return listNode->first;
+        }
+        else
+        {
+            throw std::domain_error("attempt to car an atom");
+        }
+    }
+
+    LispHandle LispHandle::cdr()
+    {
+        if (tag == ListT)
+        {
+            return listNode->second;
+        }
+        else
+        {
+            throw std::domain_error("attempt to cdr an atom");
+        }
+    }
+
+    Symbol* SymbolTable::stringToSymbol(SymbolString name)
+    {
+        // creates symbol if does not exist, returns pointer to it either way
+        return &hashTable.emplace(name, Symbol(name)).first->second;
     }
 
     ExecutionStackFrame::~ExecutionStackFrame()
@@ -124,6 +259,12 @@ namespace lisp
     VirtualMachine::VirtualMachine() : builtins(*this)
     {
         exStack.bind(builtins.quote, LispHandle(quote_SF, 0));
+        exStack.bind(builtins.def, LispHandle(def_SF, 0));
+        exStack.bind(builtins.let, LispHandle(let_SF, 0));
+        exStack.bind(builtins.lambda, LispHandle(lambda_SF, 0));
+        exStack.bind(builtins.progn, LispHandle(progn_SF, 0));
+        exStack.bind(builtins.cond, LispHandle(cond_SF, 0));
+        exStack.bind(builtins.closure, LispHandle(closure_SF, 0));
     }
 
     void VirtualMachine::print(LispHandle expr, std::ostream& printStream)
@@ -178,6 +319,7 @@ namespace lisp
 
             default:
             {
+                //printStream << expr.basicSymbol;
                 assert(false);
             }
         }
@@ -198,23 +340,35 @@ namespace lisp
             {
             case '(':
                 return readList(readStream);
+                break;
             case ')':
                 ELOG("Unexpected ')'");
                 assert(false);
+                break;
             case '.':
-
+                assert(false);
+                break;
             case '\'':
-                return listMemory.construct(builtins.quote, listMemory.construct(read(readStream), builtins.nil));
-                LOG("HI");
+                return memory.lists.construct(builtins.quote, memory.lists.construct(read(readStream), builtins.nil));
+                break;
             default:
                 assert(false);
             }
         }
         else
         {
-            return stringToSymbol(thisToken);
+            return memory.symbols.stringToSymbol(thisToken);
         }
 
+    }
+
+    void VirtualMachine::readFile(std::string path)
+    {
+        std::ifstream fileStream(path);
+        while ((fileStream >> std::ws).peek()!=EOF)
+        {
+            evaluate(read(fileStream));
+        }
     }
 
     LispHandle VirtualMachine::evaluate(LispHandle expr)
@@ -233,27 +387,18 @@ namespace lisp
                 switch(first.tag)
                 {
                 case (first.NullT):
-                    ELOG("Null-type Lisp handle");
+                    ELOG("expected function, got null");
                     assert(false);
                     break;
 
                 case (first.ListT):
-                    ELOG("function evaluated to list");
+                    ELOG("expected function, got list");
                     assert(false);
                     break;
 
                 case (first.BasicSymbolT):
-                    {
-                        if (false)
-                        {
-
-                        }
-                        else
-                        {
-                            return expr;
-                        }
-                    }
-
+                    ELOG("expected function, got symbol");
+                    assert(false);
                     break;
 
                 case (first.SpecialFormT):
@@ -262,8 +407,50 @@ namespace lisp
                     }
                     break;
 
+                case (first.NativeFunctionT):
+                    {
+                        LispHandle args = expr.listNode->second;
+                        LispHandle evaluatedArgs;
+                        LispHandle* evListTail_Ptr = &evaluatedArgs;
+
+                        while (!isAtom(args))
+                        {
+                            // read in list member, passing in first token
+                            LispHandle thisItem = evaluate(args.car());
+                            // construct a cell
+                            ListNode* newCons = memory.lists.construct();
+                            // point the cell's cdr to the new member
+                            newCons->first = thisItem;
+                            // point the list tail's next handle to the new cell
+                            *evListTail_Ptr = LispHandle(newCons);
+                            // update the pointer to the tail
+                            evListTail_Ptr = &(newCons->second);
+
+                            args = args.cdr();
+                        }
+
+                        // list ended, point last cdr to nil
+                        *evListTail_Ptr = LispHandle(builtins.nil);
+
+                        return first.nativeFunction(*this, evaluatedArgs);
+                    }
+                    break;
+
+                case (first.LambdaT):
+                    {
+                        LispHandle args = expr;
+                        for (Symbol* parameter : first.lambda->parameters)
+                        {
+                            args = args.cdr();
+                            bind(parameter, evaluate(args.car()));
+                        }
+
+                        return evaluate(first.lambda->body);
+                    }
+                    break;
+
                 default:
-                    ELOG("unaccounted for handle type");
+                    ELOG("expected function, got unaccounted for handle type");
                     assert(false);
                     break;
                 }
@@ -274,7 +461,7 @@ namespace lisp
         case (expr.BasicSymbolT):
             if (expr.basicSymbol->bindingStack.empty())
             {
-                ELOG("Unbound symbol: " << expr.basicSymbol->name);
+                ELOG("Unbound symbol (" << expr.basicSymbol->name << ")");
                 assert(false);
             }
             else
@@ -315,7 +502,7 @@ namespace lisp
                 // read in list member, passing in first token
                 LispHandle thisItem = read(readStream, currentToken);
                 // construct a cell
-                ListNode* newCons = listMemory.construct();
+                ListNode* newCons = memory.lists.construct();
                 // point the cell's cdr to the new member
                 newCons->first = thisItem;
                 // point the list tail's next handle to the new cell
@@ -332,21 +519,6 @@ namespace lisp
         return resultHandle.listNode;
     }
 
-    Symbol* VirtualMachine::readSymbol(SymbolChar& currentChar, std::istream& readStream)
-    {
-        // called after the first char of a symbol
-        SymbolString fullName;
-        while (!isWhiteSpace(currentChar) && currentChar != ')')
-        {
-            fullName += currentChar;
-            if (!readStream.get(currentChar))
-            {
-                ELOG("unexpected EOF while parsing a symbol");
-            }
-        }
-        return stringToSymbol(fullName);
-    }
-
     SymbolString VirtualMachine::readToken(std::istream& readStream)
     {
         SymbolChar currentChar;
@@ -360,7 +532,7 @@ namespace lisp
             if (!readStream)
             {
                 ELOG("unexpected stream failure");
-                return "";
+                return "<Invalid-Token>";
             }
             else if (currentChar == ';')
             {
@@ -402,12 +574,27 @@ namespace lisp
             }
         }
         ELOG("unexpected stream failure");
-        return "";
+        return "<Invalid-Token>";
     }
 
     Symbol* VirtualMachine::stringToSymbol(SymbolString name)
     {
         // creates symbol if does not exist, returns pointer to it either way
-        return &symbolTable.emplace(name, Symbol(name)).first->second;
+        return memory.symbols.stringToSymbol(name);
+    }
+
+    bool VirtualMachine::isAtom(LispHandle expr)
+    {
+        return (expr.tag != expr.ListT);
+    }
+
+    bool VirtualMachine::isList(LispHandle expr)
+    {
+        return (expr.tag == expr.ListT) || (isNil(expr));
+    }
+
+    bool VirtualMachine::isNil(LispHandle expr)
+    {
+        return (expr.tag == expr.BasicSymbolT) && (expr.basicSymbol == builtins.nil);
     }
 }

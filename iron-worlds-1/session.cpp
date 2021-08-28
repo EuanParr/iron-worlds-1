@@ -292,11 +292,9 @@ namespace session
         if (!(car0(argList)->isAtom())
             || !(car0(cdr0(argList))->isAtom()))
         {
-            std::cout << "error in eq, given ";
-            LOG(argList);
+            ELOG("error in eq, given " << argList);
             return errorAtomPtr;
         }
-        std::cout << "eqing ";
         LOG(argList);
         if (car0(argList) == car0(cdr0(argList)))
         {

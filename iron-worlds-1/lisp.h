@@ -3,8 +3,10 @@
 
 #include "platform.h"
 
+#include <functional>
 #include <iostream>
 #include <list>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -17,8 +19,21 @@ namespace lisp
     struct Symbol;
     struct LispHandle;
     class VirtualMachine;
+    class Lambda;
+    class Closure;
+    template <class T>
+    class SpecialisedMemory;
+    class SymbolTable;
 
     typedef LispHandle (*NativeFunctionPtr) (VirtualMachine&, LispHandle);
+
+    LispHandle quote_SF(VirtualMachine& vm, LispHandle args);
+    LispHandle def_SF(VirtualMachine& vm, LispHandle args);
+    LispHandle let_SF(VirtualMachine& vm, LispHandle args);
+    LispHandle lambda_SF(VirtualMachine& vm, LispHandle args);
+    LispHandle progn_SF(VirtualMachine& vm, LispHandle args);
+    LispHandle cond_SF(VirtualMachine& vm, LispHandle args);
+    LispHandle closure_SF(VirtualMachine& vm, LispHandle args);
 
     struct LispHandle
     {
@@ -31,6 +46,8 @@ namespace lisp
             Symbol* basicSymbol;
             NativeFunctionPtr nativeFunction;
             NativeFunctionPtr specialForm;
+            Lambda* lambda;
+            Closure* closure;
         };
 
         enum : char
@@ -40,7 +57,9 @@ namespace lisp
             ListT = 1,
             BasicSymbolT = 2,
             NativeFunctionT = 3,
-            SpecialFormT = 4
+            SpecialFormT = 4,
+            LambdaT = 5,
+            ClosureT = 6
         } tag;
 
         LispHandle() : listNode(nullptr), tag(NullT) {}
@@ -48,15 +67,23 @@ namespace lisp
         LispHandle(Symbol* symbol) : basicSymbol(symbol), tag(BasicSymbolT) {}
         LispHandle(NativeFunctionPtr func) : nativeFunction(func), tag(NativeFunctionT) {}
         LispHandle(NativeFunctionPtr form, int) : specialForm(form), tag(SpecialFormT) {}
+        LispHandle(Lambda* lam) : lambda(lam), tag(LambdaT) {}
+        LispHandle(Closure* clo) : closure(clo), tag(ClosureT) {}
+
+        LispHandle car();
+        LispHandle cdr();
     };
 
     struct ListNode
     {
         // Points to 2 Lisp entities and remembers their types
         LispHandle first, second;
+
+    private:
+        ListNode() {}
+    public:
+        friend class SpecialisedMemory<ListNode>;
     };
-
-
 
     struct Symbol
     {
@@ -64,12 +91,68 @@ namespace lisp
         SymbolString name;
         std::vector<LispHandle> bindingStack;
 
+    private:
         Symbol(SymbolString newName) : name(newName) {}
-    };
 
+    public:
+        friend class SymbolTable;
+    };
     std::ostream& operator<<(std::ostream& output, const Symbol& sym);
 
-    class LispListMemory
+    struct Lambda
+    {
+        std::vector<Symbol*> parameters;
+        LispHandle body;
+    protected:
+        Lambda() {}
+    public:
+        friend class SpecialisedMemory<Lambda>;
+    };
+
+    struct Closure : public Lambda
+    {
+        std::vector<std::pair<Symbol, LispHandle>> environment;
+    };
+
+    template <class T>
+    class SpecialisedMemory
+    {
+        // this pointer is a
+        T* nodesArray_Ptr;
+        size_t arraySize = 0;
+        size_t defaultSize = 0x10000;
+        size_t nextFree = 0;
+
+    public:
+        SpecialisedMemory()
+        {
+            arraySize = defaultSize;
+            nodesArray_Ptr = new T[arraySize];
+        }
+
+        ~SpecialisedMemory()
+        {
+            delete[] nodesArray_Ptr;
+        }
+
+        T* construct()
+        {
+            if (nextFree < arraySize)
+            {
+                T* result_Ptr = nodesArray_Ptr + nextFree;
+                nextFree++;
+                return result_Ptr;
+            }
+            else
+            {
+                ELOG("out of memory");
+                return nullptr;
+            }
+        }
+    };
+
+    template <>
+    class SpecialisedMemory <ListNode>
     {
         // this pointer is a
         ListNode* nodesArray_Ptr;
@@ -78,13 +161,13 @@ namespace lisp
         size_t nextFree = 0;
 
     public:
-        LispListMemory()
+        SpecialisedMemory()
         {
             arraySize = defaultSize;
             nodesArray_Ptr = new ListNode[arraySize];
         }
 
-        ~LispListMemory()
+        ~SpecialisedMemory()
         {
             delete[] nodesArray_Ptr;
         }
@@ -111,6 +194,22 @@ namespace lisp
             result_Ptr->second = second;
             return result_Ptr;
         }
+    };
+
+    class SymbolTable
+    {
+        public:
+         std::unordered_map<SymbolString, Symbol> hashTable;
+
+         Symbol* stringToSymbol(SymbolString name);
+    };
+
+    class Memory
+    {
+    public:
+        SpecialisedMemory<ListNode> lists;
+        SpecialisedMemory<Lambda> lambdas;
+        SymbolTable symbols;
     };
 
     typedef ListNode* HandleListNode;
@@ -143,7 +242,16 @@ namespace lisp
         void push_back(std::string contextString);
     };
 
-    class VirtualMachine;
+    class NativeCalledLisp
+    {
+        // hook from native code to lisp function
+    };
+
+    class LispCalledNative
+    {
+        //hook from lisp code to native function
+        std::function<int(int)> fun;
+    };
 
     class Builtins
     {
@@ -156,6 +264,9 @@ namespace lisp
         Symbol* def;
         Symbol* let;
         Symbol* lambda;
+        Symbol* progn;
+        Symbol* cond;
+        Symbol* closure;
 
         std::vector<std::pair<Symbol*&, SymbolString>> bindings =
         {
@@ -164,6 +275,9 @@ namespace lisp
             {def, "def"},
             {let, "let"},
             {lambda, "lambda"},
+            {progn, "progn"},
+            {cond, "cond"},
+            {closure, "closure"},
         };
 
         Builtins(VirtualMachine& parentVM);
@@ -172,8 +286,7 @@ namespace lisp
     class VirtualMachine
     {
         ExecutionStack exStack;
-        LispListMemory listMemory;
-        std::unordered_map<SymbolString, Symbol> symbolTable;
+        Memory memory;
         Builtins builtins;
 
         public:
@@ -185,6 +298,7 @@ namespace lisp
         VirtualMachine(const VirtualMachine&) = delete;
         VirtualMachine& operator=(const VirtualMachine&) = delete;*/
 
+        void bind(Symbol* key, LispHandle value) {exStack.bind(key, value);}
         void print(LispHandle expr, std::ostream& printStream);
         void printLn(LispHandle expr, std::ostream& printStream)
         {
@@ -194,10 +308,21 @@ namespace lisp
         LispHandle read(std::istream& readStream);
         LispHandle read(std::istream& readStream, SymbolString thisToken);
         LispHandle evaluate(LispHandle expr);
+        void readFile(std::string path);
         ListNode* readList(std::istream& readStream);
-        Symbol* readSymbol(SymbolChar& currentChar, std::istream& readStream);
         SymbolString readToken(std::istream& readStream);
         Symbol* stringToSymbol(SymbolString name);
+        bool isAtom(LispHandle expr); // nil is considered an atom
+        bool isList(LispHandle expr); // nil is considered a list
+        bool isNil(LispHandle expr);
+
+        friend LispHandle quote_SF(VirtualMachine& vm, LispHandle args);
+        friend LispHandle def_SF(VirtualMachine& vm, LispHandle args);
+        friend LispHandle let_SF(VirtualMachine& vm, LispHandle args);
+        friend LispHandle lambda_SF(VirtualMachine& vm, LispHandle args);
+        friend LispHandle progn_SF(VirtualMachine& vm, LispHandle args);
+        friend LispHandle cond_SF(VirtualMachine& vm, LispHandle args);
+        friend LispHandle closure_SF(VirtualMachine& vm, LispHandle args);
     };
 }
 
