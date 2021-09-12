@@ -12,7 +12,7 @@ namespace common_main
     void PlatformContext::updateButtonInput(unsigned int keyCode, bool newState)
     {
         platform::InputCode inputCode = getInputCodeMapRef()[keyCode];
-        bindings.updateButton(inputCode, newState);
+        inputHandler.updateButton(inputCode, newState);
     }
 
     void PlatformContext::updateViewPort(int newWidth, int newHeight)
@@ -57,7 +57,7 @@ namespace common_main
         testScene.perspectives.push_back(testPerspective);
         testScene.currentPerspective_PtrWeak = &testScene.perspectives.front();
 
-        context.bindings.bindings[platform::InputCode::Escape].setAction(new input::LambdaButtonAction([&] (bool down) {if (down) context.quit = true;}));
+        context.inputHandler.bindings[platform::InputCode::Escape].setAction(new input::LambdaButtonAction([&] (bool down) {if (down) context.quit = true;}));
 
         // set the background colour, black
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -96,34 +96,34 @@ namespace common_main
 
             matrix::Matrix<double, 3, 1> cameraMover;
 
-            if (context.bindings.queryState(platform::InputCode::A))
+            if (context.inputHandler.queryState(platform::InputCode::A))
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * xBasisMatrix);
-            if (context.bindings.queryState(platform::InputCode::D))
+            if (context.inputHandler.queryState(platform::InputCode::D))
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * xBasisMatrix);
-            if (context.bindings.queryState(platform::InputCode::F))
+            if (context.inputHandler.queryState(platform::InputCode::F))
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * yBasisMatrix);
-            if (context.bindings.queryState(platform::InputCode::R))
+            if (context.inputHandler.queryState(platform::InputCode::R))
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * yBasisMatrix);
-            if (context.bindings.queryState(platform::InputCode::S))
+            if (context.inputHandler.queryState(platform::InputCode::S))
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * zBasisMatrix);
-            if (context.bindings.queryState(platform::InputCode::W))
+            if (context.inputHandler.queryState(platform::InputCode::W))
                 cameraMover.smashMatrix(testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion.conjugate().getMatrix() * -1.0 * zBasisMatrix);
 
             testScene.currentPerspective_PtrWeak->worldDisplacement = testScene.currentPerspective_PtrWeak->worldDisplacement + cameraMover * camSpeed;
 
-            if (context.bindings.queryState(platform::InputCode::UpArrow))
+            if (context.inputHandler.queryState(platform::InputCode::UpArrow))
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (context.bindings.queryState(platform::InputCode::DownArrow))
+            if (context.inputHandler.queryState(platform::InputCode::DownArrow))
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitIQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (context.bindings.queryState(platform::InputCode::LeftArrow))
+            if (context.inputHandler.queryState(platform::InputCode::LeftArrow))
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (context.bindings.queryState(platform::InputCode::RightArrow))
+            if (context.inputHandler.queryState(platform::InputCode::RightArrow))
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitJQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (context.bindings.queryState(platform::InputCode::E))
+            if (context.inputHandler.queryState(platform::InputCode::E))
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, -camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (context.bindings.queryState(platform::InputCode::Q))
+            if (context.inputHandler.queryState(platform::InputCode::Q))
                 testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion = rotation::Quaternion<double>(rotation::unitKQuaternion, camAngularSpeed) * testScene.currentPerspective_PtrWeak->worldAngularDisplacementQuaternion;
-            if (context.bindings.queryState(platform::InputCode::Space))
+            if (context.inputHandler.queryState(platform::InputCode::Space))
             {
                 for (body::Body& newBody : testScene.bodies)
                 {

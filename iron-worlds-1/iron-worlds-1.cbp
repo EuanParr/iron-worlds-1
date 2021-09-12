@@ -157,6 +157,9 @@
 			<Option target="Win32_Debug" />
 			<Option target="Win32_Release" />
 		</Unit>
+		<Unit filename="audio.cpp" />
+		<Unit filename="audio.h" />
+		<Unit filename="bindings.lsp" />
 		<Unit filename="body.cpp" />
 		<Unit filename="body.h" />
 		<Unit filename="common_main.cpp" />
@@ -182,7 +185,6 @@
 		<Unit filename="session.h" />
 		<Unit filename="structure.cpp" />
 		<Unit filename="structure.h" />
-		<Unit filename="test.lsp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -1,9 +1,11 @@
 #ifndef INPUT_H_INCLUDED
 #define INPUT_H_INCLUDED
 
+#include "logic.h"
 #include "platform.h"
 
-#include "functional"
+#include <functional>
+#include <vector>
 
 namespace input
 {
@@ -41,7 +43,7 @@ namespace input
         bool queryState() {return isDown;}
     };
 
-    class BindingSet
+    class InputHandler
     {
     public:
         std::unordered_map<platform::InputCode, ButtonContainer, platform::InputCodeHash> bindings;

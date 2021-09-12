@@ -114,6 +114,11 @@ namespace lisp
         std::vector<std::pair<Symbol, LispHandle>> environment;
     };
 
+    class BigInt
+    {
+        std::vector<long long int> nums;
+    };
+
     template <class T>
     class SpecialisedMemory
     {

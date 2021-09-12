@@ -15,6 +15,7 @@ namespace Win32_main
         std::unordered_map<unsigned int, platform::InputCode>& getInputCodeMapRef() {return inputCodeMap;}
         void logPlatform() {LOG("Win32");}
         void sleepForMilliseconds(int time);
+        void playSoundFromMemory(audio::PCMBuffer&);
     };
 }
 

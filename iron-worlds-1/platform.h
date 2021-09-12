@@ -29,8 +29,9 @@
 #endif // PLATFORM_WIN32
 
 #ifdef DEBUG
-    #define LOG(x) std::clog << x << std::endl
-    #define ELOG(x) std::cerr << "Error in " << __FILE__ << " at line " << __LINE__ << ": " << x << std::endl
+    #define LOG(x) ::platform::logStream << x << ::std::endl
+    #define TLOG(x) ::platform::logStream << "File (" << __FILE__ << "), line("  << __LINE__ << "): " << x << ::std::endl
+    #define ELOG(x) ::platform::logStream << "Error in " << __FILE__ << " at line " << __LINE__ << ": " << x << ::std::endl
     #define FELOG(x) ELOG(x); exit(1)
 #else
 #define NDEBUG
@@ -44,8 +45,14 @@
 #include <iostream>
 #include <unordered_map>
 
+
+
 namespace platform
 {
+    #ifdef DEBUG
+        extern std::ofstream logStream;
+    #endif // DEBUG
+
     extern std::ifstream standardLisp;
 
     enum class InputCode : unsigned int

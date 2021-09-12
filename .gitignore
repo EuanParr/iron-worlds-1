@@ -35,3 +35,6 @@
 *.depend
 *.layout
 *.cscope_file_list
+
+# Logs
+iron-worlds-1/log.txt

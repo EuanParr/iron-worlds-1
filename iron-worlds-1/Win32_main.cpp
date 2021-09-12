@@ -64,6 +64,11 @@ namespace Win32_main
         }
     }
 
+    void Win32_PlatformContext::playSoundFromMemory(audio::PCMBuffer& buffer)
+    {
+        //sndPlaySound(buffer.buf, SND_ASYNC | SND_MEMORY);
+    }
+
 }
 
 void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* renderContextHandle_Ptr)
@@ -139,8 +144,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         break;
 
+        case WM_GETMINMAXINFO:
+        case WM_NCCREATE:
+        case WM_NCCALCSIZE:
+        case WM_CREATE:
+        case WM_WINDOWPOSCHANGING:
+        case WM_WINDOWPOSCHANGED:
+        case WM_MOVE:
+        case WM_GETICON:
+
+        {
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        }
+        break;
         default:
         {
+            TLOG("Unhandled WindowProc message: " << uMsg);
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
     }

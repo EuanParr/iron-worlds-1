@@ -41,7 +41,9 @@ can be type qualified as
 
 In this case, we assume a built-in function + with a signature as if it were (defun (+ natural pure) ((a natural) (b natural)) ...) and the signatures trivially match. Note that since the function name and the parameters (call both 'labels' for conciseness) are atoms in usual lisp, but qualified labels are lists, we have a natural syntax for optional qualifiers. Note also that by putting the label first in the type specifier we deviate from C-style convention but gain a neat and intuitive way to combine multiple qualifiers on a label. It seems obvious for the actual combination to be conjuction, so (f natural pure) means that f satisfies both natural and pure.
 
-The elephant in the room is the fact that the proposed signature of + is quite unhelpful for general purposes, because it would make (+ 5.6 2.4) illegal, which is rather annoying and suggests a need for (defun (+-real real pure) ((a real) (b real)) ...) allowing (+-real 5.6 2.4) which is both clunky and unsustainable (requiring )
+The elephant in the room is the fact that the proposed signature of + is quite unhelpful for general purposes, because it would make (+ 5.6 2.4) illegal, which is rather annoying and suggests a need for (defun (+-real real pure) ((a real) (b real)) ...) allowing (+-real 5.6 2.4) which is both clunky and unsustainable (requiring specialised versions of each function for every possible argument type).
+
+Haskell's type system seems to provide a better alternative - definitely typeclasses and perhaps monads should make things easier. However, Haskell has some serious conflicts with the principles of this language, such as requiring lists to be of uniform types, not to mention the execution model. Deciding how to make the system compatible will require serious thought. At any rate, it will most likely complicate the syntax, and I have an idea for that: use the other bracket types. Lisp only uses () brackets, which leaves [] and {} available for special syntax, such as type annotations. It would be neat to design the system in such a way that the content of such brackets becomes optional so they can simply be stripped in parsing to run in an unsafe 'scripting' mode. What if [] denoted 'proof guiding' (such as type annotation) while {} denoted 'compilation guiding' to suggest efficient ways for compilation processes to deal with particular pieces of code.
 
 ## an alternative
 What about something closer to intelligent assertions? Something like (defun f (a b) (assume (a natural) (b natural)) (guarantee (f natural pure)) ...) where the qualification checker tries to prove the guarantee from the assumption. The syntax is clunkier but it allows labels to be linked e.g. we can now enforce a > b by adding (> a b) to the assumption. We can also use this system in other contexts, since with non-pure programs, function signatures are only half of the picture - we could put similar statements in objects or on variables or program state
@@ -51,8 +53,17 @@ Essential to programming is the interaction of assumptions and guarantees, which
 
 # Parsing
 
-# Interface and builtins
-We need a way to 
+# application Interface
+We could use class templates to define the management and lisp-operability of native objects, and then use these by instantiating a manager in the VM for each class we want (such as bignum and bool). Because we will most likely use garbage collection in general, the managers will have to work under the VM's main memory management system to track references. We will end up with a collection of memory containers, and for garbage detection, each container will have to track not only internal references, but also references between containers, and interface containers will have to also track references between the inside and outside of the VM.
+
+Difficulties: an outwards reference cannot prevent the deletion of the entity it points to, so either the existence of the entity must be externally guaranteed (e.g. I think C++ functions are never deleted), or the lisp program can't assume the reference is valid. Smart pointers could potentially help with that but still, we should anticipate the possibility of lisp programs requiring correctness proofs beyond what external code can support (what if it throws exceptions?), so outwards references must be treated as suspect. Equally, external code can't assume the existence of a lisp entity, but a way comes to mind to deal with that: a system where external code deals with special Handle objects that can be casted to booleans like C++ pointers and null themselves when their target is deleted. Howver, this should only happen upon destruction of a VM, because a VM should not garbage collect entities that have external references to them.
+
+# User Interface
+I have an idea for user input interface. We could use a listener-stack. So, the base program has a stack frame of listeners, and entering a menu would push a frame, as would taking control of a vehicle. Exiting these contexts would pop their frames of course. Any input event starts at the top of the stack and filters down until it finds an appropriate listener. Thus higher frames can usually 'shadow' bindings of lower frames, which allows a menu or vehicle 'with focus' to easily take cursor 'focus' and use key bindings without worrying about lower levels capturing them first. However, frames can exert upwards control by reserving certain events, which prevents higher frames from capturing them. The Esc key might be a good candidate for this, to allow the user to escape any context without relying on the context itself to provide that functionality. The implementation for this feature suggests itself as a preliminary upward stack traversal followed by a downward one. Then, the natural progression for that is to maintain a duplex stack and prefer binding to the second (outwards) stack. This may present performance issues. Now, the issue of transparency - does an event get passed on from a particular frame? I think it makes sense for a handler to return a boolean value, say false means pass on (or 'throw') and true means the event is consumed.
+
+Performance: We can take advantage of the fact that if a frame has inwards opacity to a particular event then any outwards binding on that event in that frame is shadowed. *But* the inwards binding may throw the event and break our assumption. So, that would require tracking whether each binding can throw, which seems impractical. I think then we could perhaps use the 'fake stack' trick used in the Lisp VM: instead of a stack of lookup tables, we keep a lookup table of stacks, and a tracking stack determining which lookup stacks need to be popped and when. It would be more complicated here because of the duplex stacks, but should keep lookup time low (the alternative poses a potential performance problem because it requires potentially, for each key press and mouse or analogue stick update, around 10 failed table lookups).
+
+Now, how much of this should be in Lisp and how much native? And what should the structure be? 
 
 # First-Class Functions
 The language should emphasise functional programming, so we must support using functions as first-class objects. This raises the issue of non-local variables. Consider:
@@ -78,3 +89,13 @@ Now how might the evaluation proceed?
 (+ 5 4)
 9
 9
+
+Note how this requires the evaluation of y to 5, but does not require + to be evaluated at the same time.
+
+# Elfin
+Because lisp-like languages allow data and programs to have the same structure, there are interesting possibilites for a lisp version of JSON that could potentially be much more flexible. It could be called something like Lisp Functional Notation (LFN), pronounced 'Elfin' because why not. A range of names could justify that pronunciation - e.g. Extensible Linked Function Notation (ELFN). Actually, that's a decent name for the language itself.
+
+# Code formats
+Lisp-like languages present a particular challenge for compilation: Usually compilation converts text into an AST and then into bytecode or machine code for execution, but lisp expects the AST to be available at runtime, not to mention an interpreter. (Arguably, a lisp AST, if serialised, is itself bytecode.)
+
+## 
