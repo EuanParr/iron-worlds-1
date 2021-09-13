@@ -16,6 +16,8 @@ namespace Win32_main
         void logPlatform() {LOG("Win32");}
         void sleepForMilliseconds(int time);
         void playSoundFromMemory(audio::PCMBuffer&);
+
+        //void tryMciCommand(MCIDEVICEID deviceId, UNIT message, DWORD flags, DWORD paramStruct);
     };
 }
 

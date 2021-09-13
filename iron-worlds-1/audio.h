@@ -7,10 +7,12 @@ namespace audio
     // sound encoded as regular samples
     struct PCMBuffer
     {
-        long int* buf;
+        float* buf;
         int numSamples;
         double sampleRate;
-        double fixedPointConst;
+
+        double fA4 = 440.0;
+        double pRat = 1.05946;
 
         PCMBuffer(int numSamples_, double sampleRate_);
 
@@ -20,7 +22,11 @@ namespace audio
         PCMBuffer(const PCMBuffer& that) = delete;
         PCMBuffer& operator=(const PCMBuffer& that) = delete;
 
-        addSine(double frequency, double amplitude, double initialPhase = 0);
+        void addSin(double frequency, double amplitude, double initialPhase = 0);
+        void addStandingWave(double fundFreq, double fundAmp);
+        double a4RelativeSemiTone(int step);
+        int getBufSize() {return sizeof(float) * numSamples;};
+        void putNote(int note, double amp);
     };
 }
 

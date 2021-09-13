@@ -10,6 +10,7 @@
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <thread>
 #include <windows.h>
 
 HDC deviceContextHandle;
@@ -36,6 +37,8 @@ namespace Win32_main
         {VK_SPACE, platform::InputCode::Space},
         {VK_ESCAPE, platform::InputCode::Escape},
     };
+
+    HWND windowHandle;
 
     void Win32_PlatformContext::flushToScreen()
     {
@@ -64,11 +67,93 @@ namespace Win32_main
         }
     }
 
-    void Win32_PlatformContext::playSoundFromMemory(audio::PCMBuffer& buffer)
+    void soundThreadFunc(char* waveRiffBuffer)
     {
-        //sndPlaySound(buffer.buf, SND_ASYNC | SND_MEMORY);
+        PlaySound(waveRiffBuffer, NULL, SND_MEMORY);
+        delete[] waveRiffBuffer;
     }
 
+    // adapted from https://stackoverflow.com/a/1451799
+    struct WaveRiffHeader
+    {
+        DWORD riffChunkTag; // 0x46464952 is binary "RIFF", specifies RIFF format
+        DWORD riffChunkSize; // 4<waveChunkTag> + (8 + subChunk0Size)<subChunk0> + (8 + subChunk1Size)<subChunk1>
+        DWORD waveChunkTag; // 0x45564157 is binary "WAVE", specifies WAVE subformat
+
+        DWORD subChunk0Tag; // 0x20746d66 is binary "fmt ", specifies wave metadata format
+        DWORD subChunk0Size; // 16 for PCM metadata
+        WORD audioFormat; // 1 for integer PCM. 3 for floating point, 7 for mu-law
+        WORD numChannels; // mono, stereo, etc.
+        DWORD sampleRate; // samples per second
+        DWORD byteRate; // sampleRate * numChannels * bitDepth/8
+        WORD blockAlign; // numChannels * bitDepth / 8
+        WORD bitDepth; // number of bits in a sample
+
+        DWORD subChunk1Tag; // 0x61746164 is binary "data"
+        DWORD subChunk1Size; // numSamples * numChannels * bitDepth/8
+    };
+
+    void Win32_PlatformContext::playSoundFromMemory(audio::PCMBuffer& buffer)
+    {
+        char* waveRiffBuffer = new char[sizeof(WaveRiffHeader) + buffer.getBufSize()];
+
+        WaveRiffHeader* riffHeader = reinterpret_cast<WaveRiffHeader*>(waveRiffBuffer);
+        riffHeader->riffChunkTag = 0x46464952;
+        riffHeader->riffChunkSize = 4 + 8 + 16 + 8 + buffer.getBufSize();
+        riffHeader->waveChunkTag = 0x45564157;
+
+        riffHeader->subChunk0Tag = 0x20746d66;
+        riffHeader->subChunk0Size = 16;
+        riffHeader->audioFormat = 3;
+        riffHeader->numChannels = 1;
+        riffHeader->sampleRate = long(buffer.sampleRate);
+        riffHeader->byteRate = riffHeader->sampleRate * 1 * sizeof(float);
+        riffHeader->blockAlign = 1 * sizeof(float);
+        riffHeader->bitDepth = 8 * sizeof(float);
+
+        riffHeader->subChunk1Tag = 0x61746164;
+        riffHeader->subChunk1Size = buffer.getBufSize();
+
+        float* riffDataBuffer = reinterpret_cast<float*>(waveRiffBuffer + sizeof(WaveRiffHeader));
+        float* riffBufPtr = riffDataBuffer;
+        float* internalBufPtr = buffer.buf;
+
+        for (unsigned int i = 0; i < buffer.numSamples; ++i)
+        {
+            *riffDataBuffer++ = *internalBufPtr++;
+        }
+
+        std::thread audioThread(soundThreadFunc, waveRiffBuffer);
+        audioThread.detach();
+
+        /*IAudioClient::Initialize();
+        char deviceAlias[] = "Dev1";
+        MCIDEVICEID deviceId = 0;
+        MCI_WAVE_OPEN_PARMS openParams
+        {
+            DWORD_PTR(windowHandle), // window to report messages to
+            deviceId, // id of device to open to
+            LPCSTR(MCI_DEVTYPE_WAVEFORM_AUDIO), // device type
+            "waveaudio", // device name
+            deviceAlias, // optional device alias
+            DWORD(buffer.numSamples / buffer.sampleRate)
+        };
+        tryMciCommand(deviceId, MCI_OPEN, MCI_WAIT, DWORD(&openParams));
+        //mciSendCommand(deviceId, )*/
+    }
+
+    /*void Win32_PlatformContext::tryMciCommand(MCIDEVICEID deviceId, UINT message, DWORD flags, DWORD paramStruct)
+    {
+        MCIERROR errorCode = mciSendCommand(deviceId, message, flags, paramStruct);
+        // report error if any
+        if (errorCode)
+        {
+            // error code is up to 128 chars long and written to a C-style string
+            char errorString[129];
+            mciGetErrorString(errorCode, errorString, 129);
+            ELOG(errorString);
+        }
+    }*/
 }
 
 void EnableOpenGL(HWND windowHandle, HDC* deviceContextHandle_Ptr, HGLRC* renderContextHandle_Ptr)
@@ -144,6 +229,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         break;
 
+        // various messages that we do not handle currently but are aware can occur:
         case WM_GETMINMAXINFO:
         case WM_NCCREATE:
         case WM_NCCALCSIZE:
@@ -152,6 +238,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_WINDOWPOSCHANGED:
         case WM_MOVE:
         case WM_GETICON:
+        case WM_SHOWWINDOW:
+        case WM_ACTIVATEAPP:
+        case WM_NCACTIVATE:
+        case WM_ACTIVATE:
+        case WM_IME_SETCONTEXT:
+        case WM_IME_NOTIFY:
+        case WM_SETFOCUS:
+        case WM_NCPAINT:
+        case WM_ERASEBKGND:
+        case 799: // not a documented message type
+        case 49511:
+        case WM_NCHITTEST:
+        case WM_SETCURSOR:
+        case WM_MOUSEMOVE:
+        case WM_PAINT:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        case WM_SYSCOMMAND:
+        case WM_ENTERMENULOOP:
+        case WM_INITMENU:
+        case WM_MENUSELECT:
+        case WM_ENTERIDLE:
+        case WM_CAPTURECHANGED:
+        case WM_EXITMENULOOP:
+        case WM_KILLFOCUS:
 
         {
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -159,7 +270,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
         default:
         {
-            TLOG("Unhandled WindowProc message: " << uMsg);
+            TLOG("Unrecognised WindowProc message: " << uMsg);
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
     }
@@ -178,8 +289,8 @@ int WINAPI WinMain(
     // legacy
     int) //nCmdShow)
 {
+    auto& windowHandle = Win32_main::windowHandle;
     WNDCLASSEX windowClassEx;
-    HWND windowHandle;
 
     HGLRC renderContextHandle;
 

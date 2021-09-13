@@ -1,5 +1,6 @@
 #include "common_main.h"
 
+#include "audio.h"
 #include "input.h"
 #include "lisp.h"
 #include "logic.h"
@@ -89,6 +90,20 @@ namespace common_main
         }
 
         std::thread lispThread(lispThreadFunc);
+
+        audio::PCMBuffer testBuf(80000, 8000.0);
+        testBuf.putNote(0, 0.1);
+        //testBuf.putNote(2, 0.1);
+        testBuf.putNote(3, 0.1);
+        //testBuf.putNote(4, 0.1);
+        testBuf.putNote(5, 0.1);
+        //testBuf.putNote(8, 0.1);
+        //testBuf.addStandingWave(testBuf.fA4, 0.1);
+        //testBuf.addStandingWave(testBuf.fA4 * 1.5, 0.1);
+        //testBuf.addStandingWave(fA * 1.5 * 1.5, 0.1);
+
+
+        context.playSoundFromMemory(testBuf);
 
         while (!context.quit)
         {
